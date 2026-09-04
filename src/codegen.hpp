@@ -436,6 +436,51 @@ vel_concat:
             )");
         }
 
+        emit_line(R"(
+; vel_array_append: rdi = array header, rsi = element
+vel_array_append:
+    push r12
+    push r13
+    push r14
+    mov r12, rdi
+    mov r13, rsi
+    mov r14, QWORD [r12]
+    mov rax, QWORD [r12 + 8]
+    cmp r14, rax
+    jb .store
+    test rax, rax
+    jnz .grow_double
+    mov rax, 1
+    jmp .allocate
+.grow_double:
+    add rax, rax
+.allocate:
+    mov rdi, rax
+    imul rdi, 8
+    call vel_alloc
+    test rax, rax
+    jz vel_alloc_fail
+    mov rdx, rax
+    mov r8, QWORD [r12 + 16]
+    mov rcx, r14
+    imul rcx, 8
+    mov rdi, rdx
+    mov rsi, r8
+    rep movsb
+    mov QWORD [r12 + 16], rdx
+    mov QWORD [r12 + 8], rax
+.store:
+    mov rdx, QWORD [r12 + 16]
+    mov QWORD [rdx + r14 * 8], r13
+    inc r14
+    mov QWORD [r12], r14
+    mov rax, r12
+    pop r14
+    pop r13
+    pop r12
+    ret
+            )");
+
         if (m_target == CodeGenTarget::WindowsX86_64) {
             emit_line(R"(
 vel_alloc_fail:
@@ -894,6 +939,15 @@ vel_print_newline:
     void gen_expr_node(ExprCall* n)
     {
         auto name = n->name.value.value_or("");
+        if (name == "append") {
+            gen_expr(n->args[0]);
+            gen_expr(n->args[1]);
+            stack_pop("rsi");
+            stack_pop("rdi");
+            emit_line("    call vel_array_append");
+            stack_push("rax");
+            return;
+        }
         auto it = m_functions.find(name);
         if (it == m_functions.end()) {
             std::cerr << "[Vel] Undefined function: " << name << "\n";
@@ -945,9 +999,29 @@ vel_print_newline:
 
     void gen_stmt_node(StmtAssign* n)
     {
-        auto name = n->name.value.value_or("");
+        if (std::holds_alternative<ExprIndex*>(n->target->var)) {
+            auto* target = std::get<ExprIndex*>(n->target->var);
+            gen_expr(target->object);
+            gen_expr(target->index);
+            gen_expr(n->value);
+            stack_pop("rsi");
+            stack_pop("rbx");
+            stack_pop("rax");
+            emit_line("    cmp rbx, 0");
+            emit_line("    jl vel_bounds_fail");
+            emit_line("    cmp rbx, QWORD [rax]");
+            emit_line("    jae vel_bounds_fail");
+            emit_line("    mov rcx, QWORD [rax + 16]");
+            emit_line("    mov QWORD [rcx + rbx * 8], rsi");
+            return;
+        }
 
-        // Find the var and check mutability
+        if (!std::holds_alternative<ExprIdent*>(n->target->var)) {
+            std::cerr << "[Vel] Unsupported assignment target\n";
+            exit(EXIT_FAILURE);
+        }
+        auto name = std::get<ExprIdent*>(n->target->var)->tok.value.value_or("");
+
         bool found = false;
         for (auto it = m_scopes.rbegin(); it != m_scopes.rend(); ++it) {
             for (auto& v : *it) {

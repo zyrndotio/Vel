@@ -297,8 +297,6 @@ private:
         // Variable declaration: let or mut
         if (check(TT::Let) || check(TT::Mut)) return parse_var_decl();
 
-        // Assignment: ident =
-        if (check(TT::Ident) && peek(1).type == TT::Eq) return parse_assign();
 
         // return
         if (check(TT::Return)) return parse_return();
@@ -342,13 +340,21 @@ private:
             return stmt;
         }
 
-        // Expression statement (e.g. function call)
+        // Assignment or expression statement.
         if (check(TT::Ident)) {
-            auto* expr = parse_expr();
+            auto* target = parse_expr();
+            if (try_consume(TT::Eq)) {
+                auto* value = parse_expr();
+                expect(TT::Semi);
+                auto* node = m_arena.alloc<StmtAssign>(target, value);
+                auto* stmt = m_arena.alloc<Stmt>();
+                stmt->var = node;
+                return stmt;
+            }
             expect(TT::Semi);
-            auto* node = m_arena.alloc<StmtExpr>(expr);
+            auto* node = m_arena.alloc<StmtExpr>(target);
             auto* stmt = m_arena.alloc<Stmt>();
-            stmt->var  = node;
+            stmt->var = node;
             return stmt;
         }
 
@@ -435,19 +441,6 @@ private:
         return stmt;
     }
 
-    // x = expr;
-    Stmt* parse_assign()
-    {
-        auto name = consume(); // ident
-        expect(TT::Eq);
-        auto* val = parse_expr();
-        expect(TT::Semi);
-
-        auto* node = m_arena.alloc<StmtAssign>(name, val);
-        auto* stmt = m_arena.alloc<Stmt>();
-        stmt->var  = node;
-        return stmt;
-    }
 
     // return expr;   or   return;
     Stmt* parse_return()

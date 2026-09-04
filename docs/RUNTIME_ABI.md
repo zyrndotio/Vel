@@ -28,13 +28,19 @@ The current foundation intentionally does not reclaim concatenation buffers. Own
 
 ## Remaining ABI work
 
-The next runtime phase must add explicit string length metadata, array resizing and mutation, shared struct size/alignment/field-offset computation, aggregate copy semantics, allocation-failure diagnostics, and a defined ownership or reclamation policy. These changes must preserve equivalent behavior on Linux, macOS, and Windows.
+The next runtime phase must add explicit string length metadata, resizing and mutation for arrays of nested aggregates, shared struct size/alignment/field-offset computation, aggregate copy semantics, allocation-failure diagnostics, and a defined ownership or reclamation policy. These changes must preserve equivalent behavior on Linux, macOS, and Windows.
+
+## Mutation contract
+
+`mut values: [int] = [1, 2];` permits `values[0] = 9;` and `append(values, 3);`. Indexed writes require an in-range index. `append` grows capacity geometrically when the current length reaches capacity, copies existing elements into the new allocation, stores the new element, and updates length. Mutation of immutable arrays is rejected by the type checker.
+
+The current implementation covers scalar element arrays. Arrays containing strings, structs, or nested arrays still require complete element layout and ownership rules.
 
 ## Verification
 
 The native data-type test suite now includes a concatenation larger than the previous 64 KiB fixed buffer. It verifies that the generated program produces all expected bytes and a final newline. The fixture is executed on Linux x86-64 and cross-target assembly generation remains covered by the target tests.
 
-> This document describes the v0.3.0 foundation, not a completed aggregate runtime. Array literals now allocate length/capacity/data-pointer headers and reads perform native lower- and upper-bound checks, but resizing, mutable aggregate writes, complete struct layout, ownership, and full string methods remain release-blocking work.
+> This document describes the v0.3.0 foundation, not a completed aggregate runtime. Array literals now allocate length/capacity/data-pointer headers; scalar arrays support indexed writes and append growth; and reads perform native lower- and upper-bound checks. Nested aggregate mutation, complete struct layout, ownership, and full string methods remain release-blocking work.
 
 ---
 

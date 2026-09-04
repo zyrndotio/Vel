@@ -129,8 +129,8 @@ struct StmtVar {
 };
 
 struct StmtAssign {
-    Token  name;
-    Expr*  value;
+    Expr* target;
+    Expr* value;
 };
 
 struct StmtReturn {

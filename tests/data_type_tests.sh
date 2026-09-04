@@ -26,6 +26,8 @@ expect_failure bad_index 'let values: [int] = [1, 2]; let x: int = values[true];
 expect_failure missing_field 'struct Point { x: int, y: int } let p: Point = Point { x: 1 };' "missing a field"
 expect_failure unknown_field 'struct Point { x: int } let p: Point = Point { x: 1, y: 2 };' "has no field 'y'"
 expect_failure bad_concat 'let value: str = "hello" + 1;' 'operator + requires matching numeric types or two strings'
+expect_failure immutable_append 'let values: [int] = [1, 2]; append(values, 3);' "cannot append to immutable array"
+expect_failure immutable_indexed_write 'let values: [int] = [1, 2]; values[0] = 3;' "cannot mutate immutable array"
 
 if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
     "$VEL" build "$ROOT/tests/aggregates_complex.vel" >/dev/null
@@ -33,6 +35,14 @@ if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
     expected=$'3\nAB\nAB'
     [[ "$output" == "$expected" ]]
     rm -f "$ROOT/tests/aggregates_complex"
+
+    mutation_file="$(mktemp /tmp/vel-mutation-XXXXXX.vel)"
+    mutation_output="${mutation_file%.vel}"
+    printf 'mut values: [int] = [1, 2, 3];\nvalues[1] = 20;\nappend(values, 4);\nprint values[1];\nprint values[2];\nprint values[3];\n' >"$mutation_file"
+    "$VEL" build "$mutation_file" >/dev/null
+    mutation_result="$($mutation_output)"
+    [[ "$mutation_result" == $'20\n3\n4' ]]
+    rm -f "$mutation_file" "$mutation_output"
 
     # Exercise the runtime allocator beyond the former 64 KiB concat buffer.
     long_file="$(mktemp /tmp/vel-long-XXXXXX.vel)"

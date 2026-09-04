@@ -135,6 +135,20 @@ private:
     VelType check_call(const ExprCall* node, bool require_value)
     {
         const auto name = node->name.value.value_or("");
+        if (name == "append") {
+            if (node->args.size() != 2) fail("function 'append' expects 2 argument(s), got " + std::to_string(node->args.size()));
+            if (!std::holds_alternative<ExprIdent*>(node->args[0]->var)) fail("append requires an array variable as its first argument");
+            const auto array_name = std::get<ExprIdent*>(node->args[0]->var)->tok.value.value_or("");
+            auto* variable = lookup(array_name);
+            if (!variable || !variable->type_ref || variable->type_ref->kind != TypeKind::Array)
+                fail("append requires an array variable as its first argument");
+            if (!variable->mutable_value) fail("cannot append to immutable array '" + array_name + "'");
+            auto actual = expression_type(node->args[1]);
+            auto* element = variable->type_ref->element;
+            if (element && element->kind == TypeKind::Scalar && !compatible(element->scalar, actual))
+                fail("append value expects " + type_ref_str(element) + ", got " + veltype_str(actual));
+            return VelType::Unknown;
+        }
         auto function = m_functions.find(name);
         if (function == m_functions.end()) fail("undefined function '" + name + "'");
         if (node->args.size() != function->second.params.size()) {
@@ -265,16 +279,43 @@ private:
         m_scopes.back().emplace(name, Variable {declared, node->is_mut, node->type_ref});
     }
 
+    bool mutable_array_base(const Expr* expr)
+    {
+        if (std::holds_alternative<ExprIdent*>(expr->var)) {
+            const auto name = std::get<ExprIdent*>(expr->var)->tok.value.value_or("");
+            auto* variable = lookup(name);
+            if (!variable) fail("undefined variable '" + name + "'");
+            if (!variable->mutable_value) fail("cannot mutate immutable array '" + name + "'");
+            return variable->type_ref && variable->type_ref->kind == TypeKind::Array;
+        }
+        if (std::holds_alternative<ExprIndex*>(expr->var))
+            return mutable_array_base(std::get<ExprIndex*>(expr->var)->object);
+        return false;
+    }
+
     void check_stmt_node(StmtAssign* node)
     {
-        const auto name = node->name.value.value_or("");
-        auto* variable = lookup(name);
-        if (!variable) fail("undefined variable '" + name + "'");
-        if (!variable->mutable_value) fail("cannot assign to immutable variable '" + name + "'");
-        auto actual = expression_type(node->value);
-        if (!compatible(variable->type, actual))
-            fail("assignment to '" + name + "' expects " + veltype_str(variable->type)
-                 + ", got " + veltype_str(actual));
+        if (std::holds_alternative<ExprIdent*>(node->target->var)) {
+            const auto name = std::get<ExprIdent*>(node->target->var)->tok.value.value_or("");
+            auto* variable = lookup(name);
+            if (!variable) fail("undefined variable '" + name + "'");
+            if (!variable->mutable_value) fail("cannot assign to immutable variable '" + name + "'");
+            auto actual = expression_type(node->value);
+            if (!compatible(variable->type, actual))
+                fail("assignment to '" + name + "' expects " + veltype_str(variable->type)
+                     + ", got " + veltype_str(actual));
+            return;
+        }
+        if (std::holds_alternative<ExprIndex*>(node->target->var)) {
+            auto* target = std::get<ExprIndex*>(node->target->var);
+            if (!mutable_array_base(target->object)) fail("indexed assignment requires a mutable array");
+            auto expected = expression_type(node->target);
+            auto actual = expression_type(node->value);
+            if (!compatible(expected, actual))
+                fail("indexed assignment expects " + veltype_str(expected) + ", got " + veltype_str(actual));
+            return;
+        }
+        fail("assignment target is not mutable");
     }
 
     void check_stmt_node(StmtReturn* node)

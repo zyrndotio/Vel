@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.0] - 2026-09-04
+
+### Added
+- Added the initial native string allocation ABI and a large-concatenation runtime test.
+- Added native array headers, read bounds checks, dynamic scalar-array storage, indexed writes, and append growth.
+- Added resizing and mutation semantics for nested aggregate arrays.
+- Completed struct layout, nested aggregate access, and mutable field writes.
+- Added string methods, explicit length metadata, and improved diagnostics.
+- Added aggregate function parameters and return values.
+- Defined ownership, lifetime, and allocation-failure semantics for aggregate runtime values.
+- Added cross-platform native execution validation.
+
 ## [0.2.0] - 2026-09-04
 
 ### Added

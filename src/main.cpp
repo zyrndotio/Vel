@@ -248,7 +248,7 @@ static int update_release(bool download)
         return EXIT_FAILURE;
     }
     std::cout << "Latest release: " << tag << "\n";
-    if (tag == "v0.2.0" && !download) {
+    if (tag == "v0.3.0" && !download) {
         std::cout << "[Vel] Already up to date.\n";
         return EXIT_SUCCESS;
     }
@@ -296,7 +296,7 @@ static bool create_project(const fs::path& root)
         return false;
     }
     fs::create_directories(root / "src");
-    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.2.0\"\nentry = \"src/main.vel\"\n";
+    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.3.0\"\nentry = \"src/main.vel\"\n";
     std::ofstream(root / "src/main.vel") << "fn main() {\n    print \"Hello from Vel\";\n}\n\nmain();\n";
     std::ofstream(root / "README.md") << "# " << root.filename().string() << "\n\nA Vel project.\n\nRun with `vel run src/main.vel`.\n";
     std::cout << "[Vel] Created project: " << root << "\n";
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
     }
 
     if (cmd == "version") {
-        std::cout << "Vel 0.2.0\n";
+        std::cout << "Vel 0.3.0\n";
         std::cout << "Frontend: portable C++23\n";
         std::cout << "Native backends: Linux x86-64, macOS x86-64, Windows x86-64\n";
         std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";

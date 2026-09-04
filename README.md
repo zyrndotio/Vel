@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.2.0-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
+[![Compiler Version](https://img.shields.io/badge/version-0.3.0-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
 
 </div>
 
@@ -318,7 +318,7 @@ vel version             Display compiler version
 
 ## 🛣️ Roadmap
 
-### Current (v0.2.0) ✅
+### Current (v0.3.0) ✅
 - [x] Variables (`let` / `mut`)
 - [x] Basic types (`int`, `float`, `str`, `bool`)
 - [x] Arithmetic & comparison operators
@@ -332,16 +332,16 @@ vel version             Display compiler version
 - [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] `vel new`, `vel run`, `vel doctor`, and `vel clean`
 
-### In Progress (v0.3.0) 🚀
+### Completed (v0.3.0) 🚀
 - [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] Initial native array headers and bounds checks for reads
 - [x] Dynamic scalar-array storage, indexed writes, and append growth
-- [ ] Resizing and mutation semantics for nested aggregate arrays
-- [ ] Complete struct layout, nested aggregate access, and mutable field writes
-- [ ] String methods, explicit length metadata, and improved diagnostics
-- [ ] Aggregate function parameters and return values
-- [ ] Ownership, lifetime, and allocation-failure semantics
-- [ ] Cross-platform native execution validation
+- [x] Resizing and mutation semantics for nested aggregate arrays
+- [x] Complete struct layout, nested aggregate access, and mutable field writes
+- [x] String methods, explicit length metadata, and improved diagnostics
+- [x] Aggregate function parameters and return values
+- [x] Ownership, lifetime, and allocation-failure semantics
+- [x] Cross-platform native execution validation
 
 ### Deferred After v0.3.0
 - [ ] Module system basics

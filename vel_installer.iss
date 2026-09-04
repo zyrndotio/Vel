@@ -24,7 +24,7 @@ ChangesEnvironment=yes
 ; Grab your freshly built binary from your MSBuild Release tree
 Source: "build\Release\vel.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "assets\vel-logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
+Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "examples\*"; DestDir: "{app}\examples"; Flags: recursesubdirs createallsubdirs ignoreversion
 

@@ -1,12 +1,8 @@
-<p align="center">
-  <img src="assets/vel-logo.png" alt="Vel logo" width="180">
-</p>
-
 # Vel Programming Language
 
 <div align="center">
 
-![Vel](docs/assets/readme-header.png)
+![Vel](assets/readme-header.png)
 
 **Vel** — A fast, readable systems language designed for modern cross-platform desktop development.
 
@@ -14,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.1.1-orange.svg)]()
+[![Compiler Version](https://img.shields.io/badge/version-0.2.0-orange.svg)]()
 
 </div>
 

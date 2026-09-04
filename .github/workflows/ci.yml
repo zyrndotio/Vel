@@ -46,8 +46,31 @@ jobs:
           .\build\Release\vel.exe check examples\hello.vel
           .\build\Release\vel.exe check examples\counter.vel
           .\build\Release\vel.exe check examples\functions.vel
+          .\build\Release\vel.exe check tests\data_types.vel
           .\build\Release\vel.exe asm examples\hello.vel | Out-File -Encoding utf8 hello.asm
           if ((Get-Item hello.asm).Length -eq 0) { throw 'Assembly output is empty' }
+          .\build\Release\vel.exe asm examples\hello.vel windows-x86_64 | Out-File -Encoding ascii windows.asm
+          nasm -f win64 windows.asm -o windows.obj
+          if (-not (Test-Path windows.obj)) { throw 'PE/COFF object was not generated' }
+
+      - name: Install Inno Setup
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' vel_installer.iss
+          if (-not (Test-Path installer_output\VelSetup-x64.exe)) { throw 'Installer was not generated' }
+
+      - name: Upload Windows installer artifact
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: VelSetup-windows-x64
+          path: installer_output/VelSetup-x64.exe
 
       - name: Install Linux native toolchain
         if: runner.os == 'Linux'

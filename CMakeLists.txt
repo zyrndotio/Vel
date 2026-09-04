@@ -18,6 +18,8 @@ if(BUILD_TESTING AND UNIX)
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/continue_tests.sh $<TARGET_FILE:vel>)
     add_test(NAME vel_type_checker
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/type_checker_tests.sh $<TARGET_FILE:vel>)
+    add_test(NAME vel_data_types
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/data_type_tests.sh $<TARGET_FILE:vel>)
 endif()
 
 # Compiler warnings

@@ -2,7 +2,7 @@
 
 Vel is split into two layers. The **portable frontend** includes the C++23 compiler executable, tokenizer, parser, syntax checker, token dump, and NASM assembly emission. The frontend is built and smoke-tested on Linux, macOS, and Windows.
 
-The code generator now emits x86-64 Linux ELF/NASM and macOS x86-64 Mach-O/NASM assembly. Linux x86-64 can assemble and link locally; macOS x86-64 can assemble and link with NASM and Apple `ld`. Windows remains frontend-only until a PE/COFF backend is added.
+The code generator emits x86-64 Linux ELF/NASM, macOS x86-64 Mach-O/NASM, and Windows x86-64 PE/COFF/NASM assembly. Linux x86-64 can assemble and link locally; macOS x86-64 can assemble and link with NASM and Apple `ld`; Windows x86-64 can assemble and link with NASM and MinGW-w64 or a compatible Win32 toolchain.
 
 | Capability | Linux x86-64 | macOS | Windows |
 |---|---:|---:|---:|
@@ -11,8 +11,8 @@ The code generator now emits x86-64 Linux ELF/NASM and macOS x86-64 Mach-O/NASM 
 | `vel check` | Supported | Supported | Supported |
 | `vel tokens` | Supported | Supported | Supported |
 | `vel asm` | Supported | Supported | Supported |
-| `vel build` | Supported | Supported on x86-64 | Planned |
-| Run generated Vel binaries | Supported | Supported on x86-64 | Planned |
+| `vel build` | Supported | Supported on x86-64 | Supported with MinGW-w64 or compatible linker |
+| Run generated Vel binaries | Supported | Supported on x86-64 | Supported on Windows x86-64 |
 
 ## Build from source
 
@@ -41,6 +41,8 @@ cmake --build build --config Release
 ISCC.exe vel_installer.iss
 ```
 
+GitHub Actions also installs Inno Setup on the Windows runner, builds the installer, and uploads `VelSetup-windows-x64` as a CI artifact. The installer is per-user and does not require administrator privileges.
+
 ## Native backend roadmap
 
-The target abstraction and macOS Mach-O emission path are now in place. The next backend milestone is Windows PE/COFF support, followed by ARM64 targets. The macOS path currently targets x86-64 and uses Darwin syscall numbers for the built-in output routines.
+The target abstraction now covers Linux ELF, macOS Mach-O, and Windows PE/COFF. ARM64 targets remain the next backend milestone. The macOS path targets x86-64 and uses Darwin syscall numbers; the Windows path targets x86-64 and uses Win32 `WriteFile`, `GetStdHandle`, and `ExitProcess` imports.

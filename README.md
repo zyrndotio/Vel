@@ -26,7 +26,7 @@ Vel is a systems programming language that prioritizes:
 
 Perfect for applications that need to be fast, maintainable, and reliable.
 
-> **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux and macOS; Windows native output is planned.
+> **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain.
 
 See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), and [testing guide](docs/TESTING.md) for details.
 
@@ -36,7 +36,7 @@ See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs
 
 ### Prerequisites
 - **Windows/macOS/Linux**: `g++` (C++23) or compatible compiler
-- **Linux only** (for native binaries): `cmake`, `nasm`, `ld` (binutils)
+- **Native builds**: `cmake`, `nasm`, and a platform linker (`ld`/binutils on Linux, Apple `ld` on macOS, or MinGW-w64 on Windows)
 
 ### Build the Compiler
 
@@ -70,9 +70,12 @@ Windows WiX generator is an optional alternative and requires WiX separately.
 # Generate assembly and print it
 ./vel asm examples/hello.vel
 
-# Compile to a native binary (Linux only)
+# Compile to a native binary for the host target
 ./vel build examples/hello.vel
 ./hello  # Run the binary
+
+# Emit Windows PE/COFF assembly from any host
+./vel asm examples/hello.vel windows-x86_64 > hello-windows.asm
 
 # Validate syntax without native tools (works on Windows/macOS/Linux)
 ./vel check examples/hello.vel
@@ -93,9 +96,7 @@ cmake --build build --config Release
 ISCC.exe vel_installer.iss
 ```
 
-The resulting installer is the recommended Windows distribution. CPack's WiX
-generator can also produce an `.msi`, but requires WiX to be installed
-separately.
+The resulting installer is the recommended Windows distribution. The Windows CI job installs Inno Setup, compiles this script, and publishes `VelSetup-windows-x64` as a downloadable artifact. CPack's WiX generator can also produce an `.msi`, but requires WiX to be installed separately.
 
 ## Packaging with CPack
 
@@ -119,6 +120,8 @@ The generated package format depends on the platform:
 ---
 
 ## 📚 Language Features
+
+The parser and type checker currently support scalar values plus frontend validation for homogeneous arrays, array indexing, named structs, struct literals, field access, and string concatenation. Native aggregate layout and runtime string-buffer emission are the next compiler stage.
 
 ### Variables & Types
 

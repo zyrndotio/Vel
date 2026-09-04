@@ -5,7 +5,7 @@ VEL="${1:?usage: continue_tests.sh /path/to/vel}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cleanup() {
     rm -f "$ROOT/tests/continue_nested" "$ROOT/tests/continue_complex" "$ROOT/tests/functions_contracts"
-    rm -f /tmp/vel-continue.asm /tmp/vel-continue-complex.asm /tmp/vel-functions.asm /tmp/vel-functions-macho.asm /tmp/vel-bad-arity.vel /tmp/vel-bad-arity.err
+    rm -f /tmp/vel-continue.asm /tmp/vel-continue-complex.asm /tmp/vel-functions.asm /tmp/vel-functions-macho.asm /tmp/vel-functions-win.asm /tmp/vel-functions-win.obj /tmp/vel-bad-arity.vel /tmp/vel-bad-arity.err
 }
 trap cleanup EXIT
 
@@ -16,9 +16,16 @@ trap cleanup EXIT
 "$VEL" asm "$ROOT/tests/continue_complex.vel" >/tmp/vel-continue-complex.asm
 "$VEL" asm "$ROOT/tests/functions_contracts.vel" >/tmp/vel-functions.asm
 "$VEL" asm "$ROOT/tests/functions_contracts.vel" macos-x86_64 >/tmp/vel-functions-macho.asm
+"$VEL" asm "$ROOT/tests/functions_contracts.vel" windows-x86_64 >/tmp/vel-functions-win.asm
 grep -q 'section __TEXT,__text' /tmp/vel-functions-macho.asm
 grep -q '0x2000004' /tmp/vel-functions-macho.asm
 grep -q '0x2000001' /tmp/vel-functions-macho.asm
+grep -q 'global main' /tmp/vel-functions-win.asm
+grep -q 'extern ExitProcess' /tmp/vel-functions-win.asm
+grep -q 'extern WriteFile' /tmp/vel-functions-win.asm
+if command -v nasm >/dev/null 2>&1; then
+    nasm -f win64 /tmp/vel-functions-win.asm -o /tmp/vel-functions-win.obj
+fi
 
 cat >/tmp/vel-bad-arity.vel <<'EOF'
 fn add(a: int, b: int) -> int {
@@ -40,4 +47,4 @@ if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
     "$VEL" build "$ROOT/tests/functions_contracts.vel" >/dev/null
     [[ "$("$ROOT/tests/functions_contracts")" == $'427\n427' ]]
 fi
-echo "Vel continue, function, and Mach-O assembly tests passed."
+echo "Vel continue, function, aggregate type, and multi-target assembly tests passed."

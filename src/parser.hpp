@@ -84,6 +84,36 @@ private:
         error("type (int, float, str, bool)");
     }
 
+    TypeRef* parse_type_ref()
+    {
+        if (check(TT::OpenBracket)) {
+            consume();
+            auto* element = parse_type_ref();
+            expect(TT::CloseBracket);
+            auto* type = m_arena.alloc<TypeRef>();
+            type->kind = TypeKind::Array;
+            type->element = element;
+            return type;
+        }
+        auto* type = m_arena.alloc<TypeRef>();
+        if (check(TT::TyInt) || check(TT::TyFloat) || check(TT::TyStr) || check(TT::TyBool)) {
+            type->kind = TypeKind::Scalar;
+            type->scalar = parse_type();
+            return type;
+        }
+        if (check(TT::Ident)) {
+            type->kind = TypeKind::Struct;
+            type->name = consume().value.value_or("");
+            return type;
+        }
+        error("type (int, float, str, bool, [type], StructName)");
+    }
+
+    static VelType scalar_type(const TypeRef* type)
+    {
+        return type && type->kind == TypeKind::Scalar ? type->scalar : VelType::Unknown;
+    }
+
     std::optional<VelType> try_parse_type()
     {
         if (check(TT::TyInt))   { consume(); return VelType::Int; }
@@ -144,6 +174,20 @@ private:
             return expr;
         }
 
+        // Array literal
+        if (check(TT::OpenBracket)) {
+            consume();
+            std::vector<Expr*> elements;
+            while (!check(TT::CloseBracket) && !at_end()) {
+                elements.push_back(parse_expr());
+                if (!try_consume(TT::Comma)) break;
+            }
+            expect(TT::CloseBracket);
+            auto* expr = m_arena.alloc<Expr>();
+            expr->var = m_arena.alloc<ExprArray>(std::move(elements));
+            return expr;
+        }
+
         // Bool literal
         if (check(TT::BoolLit)) {
             auto tok = consume();
@@ -156,24 +200,49 @@ private:
         // Identifier or function call
         if (check(TT::Ident)) {
             auto name = consume();
-            // Function call?
-            if (check(TT::OpenParen)) {
-                consume(); // '('
-                std::vector<Expr*> args;
-                while (!check(TT::CloseParen) && !at_end()) {
-                    args.push_back(parse_expr());
-                    if (!try_consume(TT::Comma)) break;
-                }
-                expect(TT::CloseParen);
-                auto* node = m_arena.alloc<ExprCall>(name, std::move(args));
-                auto* expr = m_arena.alloc<Expr>();
-                expr->var = node;
-                return expr;
-            }
-            // Plain identifier
-            auto* node = m_arena.alloc<ExprIdent>(name);
             auto* expr = m_arena.alloc<Expr>();
-            expr->var = node;
+            expr->var = m_arena.alloc<ExprIdent>(name);
+            while (true) {
+                if (check(TT::OpenCurly)) {
+                    consume();
+                    std::vector<std::pair<Token, Expr*>> fields;
+                    while (!check(TT::CloseCurly) && !at_end()) {
+                        auto field = expect(TT::Ident);
+                        expect(TT::Colon);
+                        fields.push_back({field, parse_expr()});
+                        if (!try_consume(TT::Comma)) break;
+                    }
+                    expect(TT::CloseCurly);
+                    auto ident = std::get<ExprIdent*>(expr->var)->tok;
+                    expr->var = m_arena.alloc<ExprStructInit>(ident, std::move(fields));
+                } else if (check(TT::OpenParen)) {
+                    consume();
+                    std::vector<Expr*> args;
+                    while (!check(TT::CloseParen) && !at_end()) {
+                        args.push_back(parse_expr());
+                        if (!try_consume(TT::Comma)) break;
+                    }
+                    expect(TT::CloseParen);
+                    if (!std::holds_alternative<ExprIdent*>(expr->var)) error("callable identifier");
+                    auto ident = std::get<ExprIdent*>(expr->var)->tok;
+                    expr->var = m_arena.alloc<ExprCall>(ident, std::move(args));
+                } else if (check(TT::OpenBracket)) {
+                    consume();
+                    auto* index = parse_expr();
+                    expect(TT::CloseBracket);
+                    auto* node = m_arena.alloc<ExprIndex>(expr, index);
+                    expr = m_arena.alloc<Expr>();
+                    expr->var = node;
+                } else if (check(TT::Dot)) {
+                    consume();
+                    auto field = expect(TT::Ident);
+                    auto* node = m_arena.alloc<ExprField>(expr, field);
+                    expr = m_arena.alloc<Expr>();
+                    expr->var = node;
+                } else {
+                    break;
+                }
+            }
             return expr;
         }
 
@@ -219,6 +288,9 @@ private:
 
     Stmt* parse_stmt()
     {
+        // struct definition
+        if (check(TT::Struct)) return parse_struct();
+
         // fn definition
         if (check(TT::Fn)) return parse_fn();
 
@@ -295,19 +367,22 @@ private:
         while (!check(TT::CloseParen) && !at_end()) {
             auto pname = expect(TT::Ident);
             expect(TT::Colon);
-            VelType ptype = parse_type();
-            params.push_back({pname, ptype});
+            auto* ptype_ref = parse_type_ref();
+            params.push_back({pname, scalar_type(ptype_ref), ptype_ref});
             if (!try_consume(TT::Comma)) break;
         }
         expect(TT::CloseParen);
 
         VelType ret = VelType::Void;
+        TypeRef* ret_ref = nullptr;
         if (try_consume(TT::Arrow)) {
-            ret = parse_type();
+            ret_ref = parse_type_ref();
+            ret = scalar_type(ret_ref);
         }
 
         auto* body = parse_scope();
         auto* node = m_arena.alloc<StmtFn>(name, std::move(params), ret, body);
+        node->return_ref = ret_ref;
         auto* stmt = m_arena.alloc<Stmt>();
         stmt->var  = node;
         return stmt;
@@ -323,8 +398,10 @@ private:
         auto name = expect(TT::Ident);
 
         std::optional<VelType> type_hint;
+        TypeRef* type_ref = nullptr;
         if (try_consume(TT::Colon)) {
-            type_hint = parse_type();
+            type_ref = parse_type_ref();
+            type_hint = scalar_type(type_ref);
         }
 
         expect(TT::Eq);
@@ -332,8 +409,29 @@ private:
         expect(TT::Semi);
 
         auto* node = m_arena.alloc<StmtVar>(name, is_mut, type_hint, init);
+        node->type_ref = type_ref;
         auto* stmt = m_arena.alloc<Stmt>();
         stmt->var  = node;
+        return stmt;
+    }
+
+    Stmt* parse_struct()
+    {
+        expect(TT::Struct);
+        auto name = expect(TT::Ident);
+        auto* node = m_arena.alloc<StmtStruct>();
+        node->name = name;
+        expect(TT::OpenCurly);
+        while (!check(TT::CloseCurly) && !at_end()) {
+            auto field = expect(TT::Ident);
+            expect(TT::Colon);
+            auto* type = parse_type_ref();
+            node->fields.push_back({field, type});
+            if (!try_consume(TT::Comma)) try_consume(TT::Semi);
+        }
+        expect(TT::CloseCurly);
+        auto* stmt = m_arena.alloc<Stmt>();
+        stmt->var = node;
         return stmt;
     }
 

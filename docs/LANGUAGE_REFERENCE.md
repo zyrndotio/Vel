@@ -407,7 +407,7 @@ fn greet(name: str) {
 }
 ```
 
-Types are required for all parameters. Calls must provide exactly the declared number of arguments. The compiler validates function names and argument counts during code generation; type inference and full argument-type diagnostics remain planned.
+Types are required for all parameters. Calls must provide exactly the declared number of arguments, and the type checker validates scalar argument types before code generation. Array and named-struct parameter syntax is parsed and represented in the type system; aggregate runtime calling conventions remain under development.
 
 ### Return Type
 
@@ -445,7 +445,36 @@ fn greet(name: str) {
 greet("World");  // Call with argument
 ```
 
-Arguments must match the declared arity. Integer, boolean, and string values are currently represented through the backend’s register conventions; complete static argument-type checking is planned alongside broader type inference.
+Arguments must match the declared arity and declared scalar types. Integer, boolean, and string values are currently represented through the backend’s register conventions. Aggregate arguments are accepted by the frontend type model but are not yet emitted by native backends.
+
+### Arrays, Structs, and String Concatenation
+
+The frontend accepts homogeneous array literals and recursive array annotations:
+
+```vel
+let numbers: [int] = [1, 2, 3];
+let first: int = numbers[0];
+```
+
+Named structs use field declarations and struct literals:
+
+```vel
+struct Point {
+    x: int,
+    y: int,
+}
+
+let origin: Point = Point { x: 0, y: 0 };
+let x = origin.x;
+```
+
+The `+` operator supports concatenating two strings:
+
+```vel
+let message: str = "Hello, " + "Vel";
+```
+
+The parser and type checker validate these constructs, including homogeneous array elements and struct field names/types. Native array and struct storage/layout code generation is the next implementation stage.
 
 ### Variable Scope in Functions
 

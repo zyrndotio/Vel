@@ -4,13 +4,14 @@
 #include <iostream>
 #include <optional>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "ast.hpp"
 
-enum class CodeGenTarget { LinuxX86_64, MacOSX86_64 };
+enum class CodeGenTarget { LinuxX86_64, MacOSX86_64, WindowsX86_64 };
 
 class CodeGen {
 public:
@@ -24,8 +25,20 @@ public:
     {
         // We collect string literals during generation, emit them at the end.
 
-        emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "section __TEXT,__text" : "section .text");
-        emit_line("global _start");
+        if (m_target == CodeGenTarget::MacOSX86_64) {
+            emit_line("section __TEXT,__text");
+            emit_line("global _start");
+        } else if (m_target == CodeGenTarget::WindowsX86_64) {
+            emit_line("default rel");
+            emit_line("section .text");
+            emit_line("global main");
+            emit_line("extern ExitProcess");
+            emit_line("extern WriteFile");
+            emit_line("extern GetStdHandle");
+        } else {
+            emit_line("section .text");
+            emit_line("global _start");
+        }
 
         emit_builtins();
 
@@ -44,15 +57,20 @@ public:
 
         for (auto* s : fns) gen_fn(std::get<StmtFn*>(s->var));
         emit_line("");
-        emit_line("_start:");
+        emit_line(m_target == CodeGenTarget::WindowsX86_64 ? "main:" : "_start:");
         push_scope();
 
         for (auto* s : top) gen_stmt(s);
 
         emit_line("    ; implicit exit");
-        emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "    mov rax, 0x2000001" : "    mov rax, 60");
-        emit_line("    xor rdi, rdi");
-        emit_line("    syscall");
+        if (m_target == CodeGenTarget::WindowsX86_64) {
+            emit_line("    xor ecx, ecx");
+            emit_line("    call ExitProcess");
+        } else {
+            emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "    mov rax, 0x2000001" : "    mov rax, 60");
+            emit_line("    xor rdi, rdi");
+            emit_line("    syscall");
+        }
 
         pop_scope();
 
@@ -269,6 +287,69 @@ vel_print_newline:
                 builtins.replace(pos, 10, "mov rax, 0x2000004");
                 pos += 18;
             }
+        } else if (m_target == CodeGenTarget::WindowsX86_64) {
+            builtins = R"(
+; Windows x64 builtins. Arguments follow the Win64 calling convention.
+vel_print_str:
+    sub rsp, 40
+    mov rcx, -11
+    call GetStdHandle
+    mov rcx, rax
+    mov r8, rdx
+    mov rdx, rsi
+    lea r9, [rsp + 32]
+    mov qword [rsp + 32], 0
+    call WriteFile
+    add rsp, 40
+    ret
+vel_print_int:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 32
+    xor r8, r8
+    test rax, rax
+    jns .pos
+    neg rax
+    mov r8, 1
+.pos:
+    lea rsi, [rbp - 1]
+    mov byte [rsi], 0
+    mov rbx, 10
+    xor rcx, rcx
+.digit_loop:
+    xor rdx, rdx
+    div rbx
+    add dl, '0'
+    dec rsi
+    mov [rsi], dl
+    inc rcx
+    test rax, rax
+    jnz .digit_loop
+    test r8, r8
+    jz .write
+    dec rsi
+    mov byte [rsi], '-'
+    inc rcx
+.write:
+    mov rdx, rcx
+    call vel_print_str
+    leave
+    ret
+vel_print_bool:
+    test rax, rax
+    jz .false
+    mov rsi, vel_true_str
+    mov rdx, 4
+    jmp vel_print_str
+.false:
+    mov rsi, vel_false_str
+    mov rdx, 5
+    jmp vel_print_str
+vel_print_newline:
+    mov rsi, vel_newline
+    mov rdx, 1
+    jmp vel_print_str
+            )";
         }
         emit_line(builtins);
 
@@ -429,6 +510,16 @@ vel_print_newline:
         VelType return_type;
     };
 
+    [[noreturn]] void unsupported_aggregate(const char* feature)
+    {
+        throw std::runtime_error(std::string("code generation for ") + feature + " is not implemented for this target");
+    }
+
+    void gen_expr_node(ExprArray*) { unsupported_aggregate("array literals"); }
+    void gen_expr_node(ExprIndex*) { unsupported_aggregate("array indexing"); }
+    void gen_expr_node(ExprField*) { unsupported_aggregate("struct field access"); }
+    void gen_expr_node(ExprStructInit*) { unsupported_aggregate("struct literals"); }
+
     void gen_expr_node(ExprCall* n)
     {
         auto name = n->name.value.value_or("");
@@ -463,6 +554,8 @@ vel_print_newline:
     {
         std::visit([&](auto* node) { gen_stmt_node(node); }, stmt->var);
     }
+
+    void gen_stmt_node(StmtStruct*) { unsupported_aggregate("struct declarations"); }
 
     void gen_stmt_node(StmtVar* n)
     {

@@ -1,0 +1,11 @@
+struct Point {
+    x: int,
+    y: int,
+}
+
+let numbers: [int] = [1, 2, 3];
+let first: int = numbers[0];
+let greeting: str = "Hello, " + "Vel";
+let point: Point = Point { x: first, y: 2 };
+let x_value: int = point.x;
+print greeting;

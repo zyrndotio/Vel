@@ -25,20 +25,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added a portable `vel check` command for syntax validation without NASM or a host linker.
 - Added CTest smoke coverage and GitHub Actions builds for Linux, macOS, and Windows.
 - Added a clearer runtime capability report to `vel version`.
+- Added parser/type-checker support for homogeneous arrays, array indexing, named structs, struct literals, field access, and string concatenation.
+- Added Windows x86-64 PE/COFF assembly emission and Win32 API imports for native linking.
+- Added Windows CI coverage for PE/COFF assembly and Inno Setup installer generation.
 
 ### Changed
 - Native compilation now writes generated artifacts beside the input `.vel` file and safely quotes paths.
-- Native compilation now reports its Linux x86-64 limitation explicitly on other hosts.
+- Native compilation now selects Linux ELF, macOS Mach-O, or Windows PE/COFF based on the host target.
 - Implemented `continue` for `while` and `loop`, including stack cleanup for skipped scopes.
+- Aggregate syntax and type checking are currently frontend-only; native array/struct layout and runtime string-buffer emission remain planned.
 
 ### Planned
-- String concatenation with `+` operator
-- Array types and indexing
+- Native array and struct storage/layout code generation
+- Native string concatenation buffers and string methods
 - Better error messages with line/column diagnostics
-- Type inference improvements
+- Full recursive type checking for aggregate function arguments and returns
 - Module system basics
-- Windows target (PE/COFF) support
-- macOS target (Mach-O) support
+- ARM64 targets and Windows runtime validation across MinGW/MSVC toolchains
 
 ---
 

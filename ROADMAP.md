@@ -58,7 +58,7 @@ This document outlines the planned features and improvements for the Vel program
 #### 1. String Operations
 - [x] Plan: String concatenation with `+`
 - [x] Plan: String comparison (==, !=, etc.)
-- [ ] Implement string concatenation
+- [x] Parse and type-check string concatenation; native string-buffer emission remains planned
 - [ ] Add string escape sequences (\n, \t, etc.)
 - [ ] Implement string methods (.len(), .substr())
 - [ ] Add character type support
@@ -73,8 +73,8 @@ print greeting;  // "Hello World"
 ```
 
 #### 2. Array Types
-- [ ] Array literal syntax `[1, 2, 3]`
-- [ ] Array indexing `arr[0]`
+- [x] Parse and type-check homogeneous array literals and annotations
+- [x] Parse and type-check array indexing; native array storage remains planned
 - [ ] Array length property `.len()`
 - [ ] Array iteration patterns
 - [ ] Bounds checking
@@ -164,10 +164,10 @@ let result = add(3, 4);
 ```
 
 #### 2. Structs and Records
-- [ ] Struct definitions
-- [ ] Field access
+- [x] Parse and type-check struct definitions, literals, and field access
 - [ ] Method definitions
 - [ ] Constructor patterns
+- [ ] Native struct layout and field code generation
 - **Priority**: High
 - **Difficulty**: High
 
@@ -290,7 +290,8 @@ enum Result<T, E> {
 - [ ] SSA intermediate representation
 
 ### Multi-Target Support
-- [ ] Windows (PE/COFF) backend
+- [x] Windows x86-64 (PE/COFF) assembly backend
+- [ ] Windows native linker/runtime validation on all supported toolchains
 - [x] Target abstraction layer (Linux ELF and macOS Mach-O)
 - [ ] Cross-compilation support
 
@@ -313,7 +314,7 @@ enum Result<T, E> {
 
 #### 2. Multi-Platform Support
 - [x] Linux x86-64 (v0.1.0)
-- [ ] Windows x86-64 (PE/COFF)
+- [x] Windows x86-64 (PE/COFF) assembly backend
 - [x] macOS x86-64 (Mach-O)
 - [ ] macOS ARM64 (Apple Silicon)
 - [ ] Linux ARM64

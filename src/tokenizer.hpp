@@ -14,6 +14,7 @@ enum class TT {
 
     Ident,
     Fn,
+    Struct,
     Return,
     Let,
     Mut,
@@ -71,6 +72,7 @@ inline std::string tt_str(TT t)
     case TT::BoolLit:      return "bool literal";
     case TT::Ident:        return "identifier";
     case TT::Fn:           return "`fn`";
+    case TT::Struct:       return "`struct`";
     case TT::Return:       return "`return`";
     case TT::Let:          return "`let`";
     case TT::Mut:          return "`mut`";
@@ -329,6 +331,7 @@ private:
 
         // Keyword table
         if (val == "fn")       return {TT::Fn,       line, col};
+        if (val == "struct")    return {TT::Struct,    line, col};
         if (val == "return")   return {TT::Return,    line, col};
         if (val == "let")      return {TT::Let,       line, col};
         if (val == "mut")      return {TT::Mut,       line, col};

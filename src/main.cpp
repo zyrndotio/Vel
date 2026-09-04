@@ -30,11 +30,11 @@ static void usage()
 {
     std::cerr << "Vel Programming Language Compiler\n";
     std::cerr << "Usage:\n";
-    std::cerr << "  vel <file.vel>            compile and run (Linux x86-64)\n";
-    std::cerr << "  vel build <file.vel>      compile to native binary (Linux x86-64)\n";
+    std::cerr << "  vel <file.vel>            compile and run for the host target\n";
+    std::cerr << "  vel build <file.vel>      compile to native binary for the host target\n";
     std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
     std::cerr << "  vel asm   <file.vel> [target] emit target assembly\n";
-    std::cerr << "                             targets: linux-x86_64, macos-x86_64\n";
+    std::cerr << "                             targets: linux-x86_64, macos-x86_64, windows-x86_64\n";
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
     std::cerr << "  vel version               print version\n";
     std::cerr << "  vel help                  show this help\n";
@@ -42,7 +42,9 @@ static void usage()
 
 static CodeGenTarget host_target()
 {
-#if defined(__APPLE__) && defined(__x86_64__)
+#if defined(_WIN32) && defined(_M_X64)
+    return CodeGenTarget::WindowsX86_64;
+#elif defined(__APPLE__) && defined(__x86_64__)
     return CodeGenTarget::MacOSX86_64;
 #else
     return CodeGenTarget::LinuxX86_64;
@@ -55,6 +57,8 @@ static bool native_backend_available(CodeGenTarget target)
     return target == CodeGenTarget::LinuxX86_64;
 #elif defined(__APPLE__) && defined(__x86_64__)
     return target == CodeGenTarget::MacOSX86_64;
+#elif defined(_WIN32) && defined(_M_X64)
+    return target == CodeGenTarget::WindowsX86_64;
 #else
     (void)target;
     return false;
@@ -65,6 +69,7 @@ static std::optional<CodeGenTarget> parse_target(const std::string& name)
 {
     if (name == "linux-x86_64") return CodeGenTarget::LinuxX86_64;
     if (name == "macos-x86_64") return CodeGenTarget::MacOSX86_64;
+    if (name == "windows-x86_64") return CodeGenTarget::WindowsX86_64;
     return {};
 }
 
@@ -132,7 +137,8 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     fs::path obj_path = out_dir / (stem + ".o");
     fs::path bin_path = out_dir / stem;
     std::string asm_out = asm_path.string();
-    const char* object_format = target == CodeGenTarget::MacOSX86_64 ? "macho64" : "elf64";
+    const char* object_format = target == CodeGenTarget::MacOSX86_64 ? "macho64"
+        : target == CodeGenTarget::WindowsX86_64 ? "win64" : "elf64";
     std::string obj_out = obj_path.string();
     std::string bin_out = bin_path.string();
 
@@ -164,9 +170,18 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     }
 
     if (verbose) std::cerr << "[Vel] Linking...\n";
-    std::string ld_cmd = target == CodeGenTarget::MacOSX86_64
-        ? "ld -arch x86_64 -macosx_version_min 10.15 -e _start -o " + shell_quote(bin_out) + " " + shell_quote(obj_out)
-        : "ld -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
+    std::string ld_cmd;
+    if (target == CodeGenTarget::MacOSX86_64) {
+        ld_cmd = "ld -arch x86_64 -macosx_version_min 10.15 -e _start -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
+    } else if (target == CodeGenTarget::WindowsX86_64) {
+#if defined(_WIN32)
+        ld_cmd = "gcc -o " + shell_quote(bin_out + ".exe") + " " + shell_quote(obj_out) + " -lkernel32";
+#else
+        ld_cmd = "x86_64-w64-mingw32-gcc -o " + shell_quote(bin_out + ".exe") + " " + shell_quote(obj_out) + " -lkernel32";
+#endif
+    } else {
+        ld_cmd = "ld -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
+    }
     if (system(ld_cmd.c_str()) != 0) {
         std::cerr << "[Vel] Linking failed\n";
         exit(EXIT_FAILURE);
@@ -195,7 +210,7 @@ int main(int argc, char* argv[])
     if (cmd == "version") {
         std::cout << "Vel 0.1.1\n";
         std::cout << "Frontend: portable C++23\n";
-        std::cout << "Native backends: Linux x86-64, macOS x86-64\n";
+        std::cout << "Native backends: Linux x86-64, macOS x86-64, Windows x86-64\n";
         std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";
         return EXIT_SUCCESS;
     }

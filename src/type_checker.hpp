@@ -39,6 +39,7 @@ private:
     struct Variable {
         VelType type;
         bool mutable_value;
+        TypeRef* type_ref {nullptr};
     };
 
     struct FunctionInfo {
@@ -110,7 +111,12 @@ private:
         auto lhs = expression_type(node->lhs);
         auto rhs = expression_type(node->rhs);
         switch (node->op.type) {
-        case TT::Plus: case TT::Minus: case TT::Star: case TT::Slash: case TT::Percent:
+        case TT::Plus:
+            if (lhs == VelType::Str && rhs == VelType::Str) return VelType::Str;
+            if (!numeric(lhs) || !numeric(rhs) || lhs != rhs)
+                fail("operator + requires matching numeric types or two strings");
+            return lhs;
+        case TT::Minus: case TT::Star: case TT::Slash: case TT::Percent:
             if (!numeric(lhs) || !numeric(rhs) || lhs != rhs)
                 fail("arithmetic operands must have the same numeric type");
             return lhs;
@@ -153,6 +159,74 @@ private:
         return check_call(node, true);
     }
 
+    VelType expression_type_node(const ExprArray* node)
+    {
+        std::optional<VelType> element_type;
+        for (auto* element : node->elements) {
+            auto current = expression_type(element);
+            if (!element_type) element_type = current;
+            else if (*element_type != current) fail("array elements must have the same type");
+        }
+        return VelType::Unknown;
+    }
+
+    VelType expression_type_node(const ExprIndex* node)
+    {
+        auto index_type = expression_type(node->index);
+        if (index_type != VelType::Int) fail("array index must be int");
+        auto object_type = expression_type(node->object);
+        if (object_type != VelType::Unknown) fail("indexing requires an array value");
+        if (std::holds_alternative<ExprIdent*>(node->object->var)) {
+            auto* variable = lookup(std::get<ExprIdent*>(node->object->var)->tok.value.value_or(""));
+            if (!variable || !variable->type_ref || variable->type_ref->kind != TypeKind::Array)
+                fail("indexing requires an array value");
+            return variable->type_ref->element && variable->type_ref->element->kind == TypeKind::Scalar
+                ? variable->type_ref->element->scalar : VelType::Unknown;
+        }
+        return VelType::Unknown;
+    }
+
+    VelType expression_type_node(const ExprField* node)
+    {
+        auto object_type = expression_type(node->object);
+        if (object_type != VelType::Unknown) fail("field access requires a struct value");
+        if (std::holds_alternative<ExprIdent*>(node->object->var)) {
+            auto* variable = lookup(std::get<ExprIdent*>(node->object->var)->tok.value.value_or(""));
+            if (!variable || !variable->type_ref || variable->type_ref->kind != TypeKind::Struct)
+                fail("field access requires a struct value");
+            auto structure = m_structs.find(variable->type_ref->name);
+            if (structure == m_structs.end()) fail("undefined struct '" + variable->type_ref->name + "'");
+            const auto field_name = node->field.value.value_or("");
+            if (!structure->second.contains(field_name))
+                fail("struct '" + variable->type_ref->name + "' has no field '" + field_name + "'");
+            auto* field_type = structure->second.at(field_name);
+            return field_type->kind == TypeKind::Scalar ? field_type->scalar : VelType::Unknown;
+        }
+        return VelType::Unknown;
+    }
+
+    VelType expression_type_node(const ExprStructInit* node)
+    {
+        const auto name = node->name.value.value_or("");
+        auto structure = m_structs.find(name);
+        if (structure == m_structs.end()) fail("undefined struct '" + name + "'");
+        std::unordered_map<std::string, bool> seen;
+        for (const auto& [field, value] : node->fields) {
+            const auto field_name = field.value.value_or("");
+            if (!structure->second.contains(field_name))
+                fail("struct '" + name + "' has no field '" + field_name + "'");
+            if (seen.contains(field_name)) fail("duplicate field '" + field_name + "'");
+            seen[field_name] = true;
+            auto expected = structure->second.at(field_name);
+            auto actual = expression_type(value);
+            if (expected->kind == TypeKind::Scalar && expected->scalar != actual)
+                fail("field '" + field_name + "' expects " + type_ref_str(expected) + ", got " + veltype_str(actual));
+        }
+        if (seen.size() != structure->second.size())
+            fail("struct literal '" + name + "' is missing a field");
+        return VelType::Unknown;
+    }
+
     void check_stmt(Stmt* stmt)
     {
         std::visit([&](auto* node) { check_stmt_node(node); }, stmt->var);
@@ -167,7 +241,7 @@ private:
                  + veltype_str(declared) + ", got " + veltype_str(actual));
         auto name = node->name.value.value_or("");
         if (m_scopes.back().contains(name)) fail("variable '" + name + "' is already defined in this scope");
-        m_scopes.back().emplace(name, Variable {declared, node->is_mut});
+        m_scopes.back().emplace(name, Variable {declared, node->is_mut, node->type_ref});
     }
 
     void check_stmt_node(StmtAssign* node)
@@ -197,6 +271,19 @@ private:
     }
 
     void check_stmt_node(StmtPrint* node) { expression_type(node->value); }
+
+    void check_stmt_node(StmtStruct* node)
+    {
+        const auto name = node->name.value.value_or("");
+        if (m_structs.contains(name)) fail("duplicate struct '" + name + "'");
+        std::unordered_map<std::string, TypeRef*> fields;
+        for (const auto& field : node->fields) {
+            const auto field_name = field.name.value.value_or("");
+            if (fields.contains(field_name)) fail("duplicate field '" + field_name + "'");
+            fields.emplace(field_name, field.type);
+        }
+        m_structs.emplace(name, std::move(fields));
+    }
 
     void check_stmt_node(StmtIf* node)
     {
@@ -262,7 +349,7 @@ private:
         for (const auto& param : node->params) {
             auto name = param.name.value.value_or("");
             if (m_scopes.back().contains(name)) fail("duplicate parameter '" + name + "'");
-            m_scopes.back().emplace(name, Variable {param.type, false});
+            m_scopes.back().emplace(name, Variable {param.type, false, param.type_ref});
         }
         for (auto* stmt : node->body->stmts) check_stmt(stmt);
         pop_scope();
@@ -284,6 +371,7 @@ private:
     const Program& m_program;
     std::vector<std::unordered_map<std::string, Variable>> m_scopes;
     std::unordered_map<std::string, FunctionInfo> m_functions;
+    std::unordered_map<std::string, std::unordered_map<std::string, TypeRef*>> m_structs;
     std::optional<VelType> m_current_return_type;
     bool m_current_fn_has_return {false};
     size_t m_loop_depth {0};

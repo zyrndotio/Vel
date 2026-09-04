@@ -69,7 +69,7 @@ vel build examples/hello.vel
 
 **On Windows/macOS:**
 
-Windows remains frontend-only until a PE/COFF backend is available. macOS x86-64 can use the Mach-O backend; macOS ARM64 should select `vel asm ... macos-x86_64` for assembly output and cannot currently link a native ARM64 binary.
+Windows x86-64 can use the PE/COFF backend when NASM and MinGW-w64 (or another compatible linker) are installed. macOS x86-64 can use the Mach-O backend; macOS ARM64 should select `vel asm ... macos-x86_64` for assembly output and cannot currently link a native ARM64 binary.
 
 ### `asm` — Generate Target Assembly
 
@@ -77,7 +77,7 @@ Windows remains frontend-only until a PE/COFF backend is available. macOS x86-64
 vel asm <file.vel> [target]
 ```
 
-Generates assembly to standard output. The optional target is `linux-x86_64` or `macos-x86_64`; when omitted, the host default is selected.
+Generates assembly to standard output. The optional target is `linux-x86_64`, `macos-x86_64`, or `windows-x86_64`; when omitted, the host default is selected.
 
 Generates assembly and writes it to standard output without running linking steps.
 
@@ -91,6 +91,7 @@ vel asm examples/counter.vel > counter.asm  # Save the assembly
 - Prints x86-64 NASM syntax to standard output.
 - `linux-x86_64` emits ELF/Linux sections and syscalls.
 - `macos-x86_64` emits Mach-O/Darwin sections and syscalls.
+- `windows-x86_64` emits PE/COFF sections and Win32 API imports for native linking.
 
 ### `tokens` — Debug Token Stream
 

@@ -2,6 +2,7 @@
 
 #include <optional>
 #include <string>
+#include <memory>
 #include <variant>
 #include <vector>
 
@@ -13,6 +14,33 @@ struct Scope;
 
 
 enum class VelType { Int, Float, Str, Bool, Void, Unknown };
+
+enum class TypeKind { Scalar, Array, Struct };
+
+struct TypeRef {
+    TypeKind kind {TypeKind::Scalar};
+    VelType scalar {VelType::Unknown};
+    std::string name;
+    TypeRef* element {nullptr};
+};
+
+inline bool same_type(const TypeRef* lhs, const TypeRef* rhs)
+{
+    if (!lhs || !rhs || lhs->kind != rhs->kind) return false;
+    if (lhs->kind == TypeKind::Scalar) return lhs->scalar == rhs->scalar;
+    if (lhs->kind == TypeKind::Struct) return lhs->name == rhs->name;
+    return same_type(lhs->element, rhs->element);
+}
+
+inline std::string veltype_str(VelType t);
+
+inline std::string type_ref_str(const TypeRef* type)
+{
+    if (!type) return "?";
+    if (type->kind == TypeKind::Scalar) return veltype_str(type->scalar);
+    if (type->kind == TypeKind::Struct) return type->name;
+    return "[" + type_ref_str(type->element) + "]";
+}
 
 inline std::string veltype_str(VelType t)
 {
@@ -54,6 +82,25 @@ struct ExprCall {
     std::vector<Expr*>  args;
 };
 
+struct ExprArray {
+    std::vector<Expr*> elements;
+};
+
+struct ExprIndex {
+    Expr* object;
+    Expr* index;
+};
+
+struct ExprField {
+    Expr* object;
+    Token field;
+};
+
+struct ExprStructInit {
+    Token name;
+    std::vector<std::pair<Token, Expr*>> fields;
+};
+
 struct Expr {
     std::variant<
         ExprIntLit*,
@@ -64,7 +111,11 @@ struct Expr {
         ExprUnary*,
         ExprBinary*,
         ExprParen*,
-        ExprCall*
+        ExprCall*,
+        ExprArray*,
+        ExprIndex*,
+        ExprField*,
+        ExprStructInit*
     > var;
 };
 
@@ -72,8 +123,9 @@ struct Expr {
 struct StmtVar {
     Token                    name;
     bool                     is_mut;         // mut vs let
-    std::optional<VelType>   type_hint;      // optional annotation
+    std::optional<VelType>   type_hint;      // legacy scalar annotation
     Expr*                    init;
+    TypeRef*                 type_ref {nullptr};
 };
 
 struct StmtAssign {
@@ -87,6 +139,16 @@ struct StmtReturn {
 
 struct StmtPrint {
     Expr* value;
+};
+
+struct StructField {
+    Token name;
+    TypeRef* type;
+};
+
+struct StmtStruct {
+    Token name;
+    std::vector<StructField> fields;
 };
 
 struct StmtIf;
@@ -124,6 +186,7 @@ struct StmtScope {
 struct FnParam {
     Token   name;
     VelType type;
+    TypeRef* type_ref {nullptr};
 };
 
 struct StmtFn {
@@ -131,6 +194,7 @@ struct StmtFn {
     std::vector<FnParam>   params;
     VelType                return_type;
     Scope*                 body;
+    TypeRef*               return_ref {nullptr};
 };
 
 // Expression used as a statement (e.g. a function call)
@@ -144,6 +208,7 @@ struct Stmt {
         StmtAssign*,
         StmtReturn*,
         StmtPrint*,
+        StmtStruct*,
         StmtIf*,
         StmtWhile*,
         StmtLoop*,

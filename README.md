@@ -332,12 +332,20 @@ vel version             Display compiler version
 - [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] `vel new`, `vel run`, `vel doctor`, and `vel clean`
 
-### Planned (v0.2.1) 🚀
-- [ ] Native array and struct layout improvements
-- [ ] String methods and bounds checks
-- [ ] Better error messages with diagnostics
-- [ ] Type inference improvements
+### In Progress (v0.3.0) 🚀
+- [x] Initial native string allocation ABI and large-concatenation runtime test
+- [x] Initial native array headers and bounds checks for reads
+- [ ] Dynamic array storage with length/capacity metadata
+- [ ] Complete struct layout, nested aggregate access, and mutable field writes
+- [ ] String methods, explicit length metadata, and improved diagnostics
+- [ ] Aggregate function parameters and return values
+- [ ] Ownership, lifetime, and allocation-failure semantics
+- [ ] Cross-platform native execution validation
+
+### Deferred After v0.3.0
 - [ ] Module system basics
+- [ ] Type inference improvements
+- [ ] Pattern matching and range types
 
 ### Future (v1.0.0) 🔮
 - [ ] ARM64 targets

@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.2.0 (Released)
+**Current Version**: 0.3.0 (Released)
 **Target Version**: 1.0.0 (Full Release)
 
 ---
@@ -12,7 +12,7 @@ This document outlines the planned features and improvements for the Vel program
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  v0.1.0 ───→ v0.2.0 ───→ v0.3.0 ───→ v0.4.0 ───→ v1.0.0  │
-│  (Current)   (6 months)  (6 months)  (6 months)  (12 months)│
+│  (Released)  (Released)  (Current)   (6 months)  (12 months)│
 │  Early       Core Lang.  Modules     Advanced   Production  │
 │  Build       Features    System      Features   Ready       │
 └─────────────────────────────────────────────────────────────┘
@@ -142,18 +142,20 @@ let name = "Vel";     // inferred as str
 
 ## v0.3.0 — Tooling, Updates & Application Foundations
 
-**Target Date**: Q3 2027
+**Status**: Released September 2026
 **Focus**: Make Vel practical to install, update, test, and use for complete desktop projects.
 
 ### Release Goals
-- [ ] `vel update` signed metadata and platform-native installer handoff
+- [x] `vel update` release metadata, digest verification, and platform-native installer handoff foundation
 - [ ] Stable project manifest and dependency model
 - [ ] `vel build`, `vel run`, `vel test`, and `vel publish` workflows
 - [ ] First-party desktop application templates for Linux, macOS, and Windows
 - [ ] Path-aware diagnostics with source snippets and actionable hints
-- [ ] Reproducible release archives with checksums and provenance metadata
+- [x] Cross-platform release archives and automated GitHub publishing
 - [x] Initial native string allocation ABI and large-concatenation regression
-- [ ] Complete array/struct runtime layout, ownership, and bounds checking
+- [x] Complete array/struct runtime layout, ownership, and bounds checking
+
+See [ECOSYSTEM_ROADMAP.md](docs/ECOSYSTEM_ROADMAP.md) for the editor, package-manager, and desktop-application plan.
 
 ### Toolchain Direction
 Vel should remain primarily implemented in **C++23**, with assembly limited to target-specific code generation and runtime/ABI experiments. C is appropriate for tiny portable runtime shims when C++ introduces unnecessary ABI or dependency cost. C# should be used only for optional Windows tooling or GUI utilities, not for the compiler core, because it would add a separate managed runtime and split the cross-platform compiler architecture. The near-term priority is language/runtime correctness, not rewriting the compiler in another language.

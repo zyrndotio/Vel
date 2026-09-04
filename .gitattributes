@@ -1,0 +1,6 @@
+*.vel linguist-language=Vel linguist-detectable=true
+
+# Keep generated compiler output and local builds out of language statistics.
+build/ linguist-vendored
+*.asm linguist-generated
+*.o linguist-generated

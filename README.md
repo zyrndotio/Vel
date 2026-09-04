@@ -307,6 +307,9 @@ vel version             Display compiler version
 ## 📖 Documentation
 
 - [Building & Installation](docs/BUILDING.md)
+- [Installation Guide](docs/INSTALLATION.md)
+- [Editor and GitHub Support](docs/EDITOR_SUPPORT.md)
+- [Ecosystem Roadmap](docs/ECOSYSTEM_ROADMAP.md)
 - [CLI Reference](docs/CLI_REFERENCE.md)
 - [Language Reference](docs/LANGUAGE_REFERENCE.md)
 - [Testing Guide](docs/TESTING.md)

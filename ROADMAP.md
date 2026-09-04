@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.1.1 (Early Build)
+**Current Version**: 0.2.0 (Released)
 **Target Version**: 1.0.0 (Full Release)
 
 ---
@@ -140,9 +140,41 @@ let name = "Vel";     // inferred as str
 
 ---
 
-## v0.3.0 — Module System & Intermediate Features
+## v0.3.0 — Tooling, Updates & Application Foundations
 
-**Target Date**: Q4 2027
+**Target Date**: Q3 2027
+**Focus**: Make Vel practical to install, update, test, and use for complete desktop projects.
+
+### Release Goals
+- [ ] `vel update` signed metadata and platform-native installer handoff
+- [ ] Stable project manifest and dependency model
+- [ ] `vel build`, `vel run`, `vel test`, and `vel publish` workflows
+- [ ] First-party desktop application templates for Linux, macOS, and Windows
+- [ ] Path-aware diagnostics with source snippets and actionable hints
+- [ ] Reproducible release archives with checksums and provenance metadata
+
+### Toolchain Direction
+Vel should remain primarily implemented in **C++23**, with assembly limited to target-specific code generation and runtime/ABI experiments. C is appropriate for tiny portable runtime shims when C++ introduces unnecessary ABI or dependency cost. C# should be used only for optional Windows tooling or GUI utilities, not for the compiler core, because it would add a separate managed runtime and split the cross-platform compiler architecture. The near-term priority is language/runtime correctness, not rewriting the compiler in another language.
+
+### Desktop Application Foundation
+- [ ] Application project template and manifest metadata
+- [ ] Window/event abstraction with native backends
+- [ ] Resource bundling and platform-specific application packaging
+- [ ] Cross-platform filesystem and process APIs
+- [ ] Example desktop application built from Vel source
+
+### Update and Release Security
+- [ ] Signed release manifest and key rotation policy
+- [ ] Verify asset digest before installation
+- [ ] Atomic replacement through a platform-native helper
+- [ ] Rollback to the previous compiler after failed update
+- [ ] Update-channel selection for stable and prerelease builds
+
+---
+
+## Deferred — Module System & Intermediate Features
+
+**Target Date**: After v0.3.0 foundations
 **Estimated Scope**: 8-10 weeks
 
 ### Major Features

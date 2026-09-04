@@ -1,7 +1,9 @@
 #include <cstdlib>
 #include <filesystem>
+#include <cstdio>
 #include <fstream>
 #include <iostream>
+#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -40,6 +42,7 @@ static void usage()
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
     std::cerr << "  vel doctor               inspect native tool availability\n";
     std::cerr << "  vel clean <file.vel>     remove generated artifacts\n";
+    std::cerr << "  vel update [--download]  check or download a verified release\n";
     std::cerr << "  vel version               print version\n";
     std::cerr << "  vel help                  show this help\n";
 }
@@ -197,6 +200,85 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     return bin_out;
 }
 
+static std::string capture_command(const std::string& command)
+{
+    std::string output;
+#if defined(_WIN32)
+    FILE* pipe = _popen(command.c_str(), "r");
+#else
+    FILE* pipe = popen(command.c_str(), "r");
+#endif
+    if (!pipe) return {};
+    char buffer[4096];
+    while (fgets(buffer, sizeof(buffer), pipe)) output += buffer;
+#if defined(_WIN32)
+    _pclose(pipe);
+#else
+    pclose(pipe);
+#endif
+    return output;
+}
+
+static std::string release_asset_name(CodeGenTarget target, const std::string& tag)
+{
+    if (target == CodeGenTarget::WindowsX86_64) return "vel-" + tag + "-windows-x86_64.zip";
+    if (target == CodeGenTarget::MacOSX86_64) return "vel-" + tag + "-macos-x86_64.tar.gz";
+    return "vel-" + tag + "-linux-x86_64.tar.gz";
+}
+
+static int update_release(bool download)
+{
+    const std::string api = "https://api.github.com/repos/zyrndotio/Vel/releases/latest";
+    const std::string json = capture_command("curl -fsSL -H " + shell_quote("Accept: application/vnd.github+json") + " " + shell_quote(api));
+    if (json.empty()) {
+        std::cerr << "[Vel] Could not query the latest GitHub release. Install curl or check your network.\n";
+        return EXIT_FAILURE;
+    }
+    std::smatch tag_match;
+    if (!std::regex_search(json, tag_match, std::regex("\\\"tag_name\\\"\\s*:\\s*\\\"([^\\\"]+)\\\""))) {
+        std::cerr << "[Vel] GitHub returned no published release.\n";
+        return EXIT_FAILURE;
+    }
+    const auto tag = tag_match[1].str();
+    const auto asset = release_asset_name(host_target(), tag);
+    std::regex asset_re("\\\"name\\\"\\s*:\\s*\\\"" + asset + "\\\"[\\s\\S]*?\\\"digest\\\"\\s*:\\s*\\\"sha256:([0-9a-fA-F]+)\\\"[\\s\\S]*?\\\"browser_download_url\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
+    std::smatch asset_match;
+    if (!std::regex_search(json, asset_match, asset_re)) {
+        std::cerr << "[Vel] No release asset is available for this host: " << asset << "\n";
+        return EXIT_FAILURE;
+    }
+    std::cout << "Latest release: " << tag << "\n";
+    if (tag == "v0.2.0" && !download) {
+        std::cout << "[Vel] Already up to date.\n";
+        return EXIT_SUCCESS;
+    }
+    if (!download) {
+        std::cout << "[Vel] Update available for " << asset << ". Use `vel update --download` to download it.\n";
+        return EXIT_SUCCESS;
+    }
+    const auto destination = fs::current_path() / asset;
+    const auto url = asset_match[2].str();
+    if (std::system(("curl -fL --retry 3 -o " + shell_quote(destination.string()) + " " + shell_quote(url)).c_str()) != 0) {
+        std::cerr << "[Vel] Release download failed.\n";
+        return EXIT_FAILURE;
+    }
+#if defined(_WIN32)
+    const auto digest = capture_command("certutil -hashfile " + shell_quote(destination.string()) + " SHA256");
+#else
+    const auto digest = capture_command("sha256sum " + shell_quote(destination.string()) + " 2>/dev/null || shasum -a 256 " + shell_quote(destination.string()));
+#endif
+    std::regex hex_re(R"(([0-9a-fA-F]{64}))");
+    std::smatch digest_match;
+    if (!std::regex_search(digest, digest_match, hex_re) || digest_match[1].str() != asset_match[1].str()) {
+        fs::remove(destination);
+        std::cerr << "[Vel] Checksum verification failed; downloaded file was removed.\n";
+        return EXIT_FAILURE;
+    }
+    std::cout << "[Vel] Verified update downloaded to: " << destination << "\n";
+    std::cout << "[Vel] The archive was not installed automatically. Review it, then replace Vel using the platform installer/package.\n";
+    return EXIT_SUCCESS;
+}
+
 static int tool_available(const char* tool)
 {
 #if defined(_WIN32)
@@ -251,6 +333,11 @@ int main(int argc, char* argv[])
 
     if (cmd == "new" && argc >= 3) {
         return create_project(fs::path(argv[2])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if (cmd == "update") {
+        bool download = argc >= 3 && std::string(argv[2]) == "--download";
+        return update_release(download);
     }
 
     if (cmd == "doctor") {

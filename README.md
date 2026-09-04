@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.2.0-orange.svg)]()
+[![Compiler Version](https://img.shields.io/badge/version-0.2.0-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
 
 </div>
 
@@ -28,7 +28,7 @@ Perfect for applications that need to be fast, maintainable, and reliable.
 
 > **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain.
 
-See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), and [testing guide](docs/TESTING.md) for details.
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), and [update design](docs/UPDATE_DESIGN.md) for details.
 
 ---
 

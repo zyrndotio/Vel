@@ -35,6 +35,22 @@ global _start
 ; ... assembly code ...
 ```
 
+### `new` — Create a Project
+
+```
+vel new <project>
+```
+
+Creates a starter project with `vel.toml`, `src/main.vel`, and a project README.
+
+### `run` — Compile and Run
+
+```
+vel run <file.vel>
+```
+
+Compiles and executes a Vel program for the host target.
+
 ### `check` — Validate Without Native Tools
 
 ```
@@ -93,6 +109,31 @@ vel asm examples/counter.vel > counter.asm  # Save the assembly
 - `macos-x86_64` emits Mach-O/Darwin sections and syscalls.
 - `windows-x86_64` emits PE/COFF sections and Win32 API imports for native linking.
 
+### `update` — Check or Download a Release
+
+```
+vel update
+vel update --download
+```
+
+Queries the latest published Vel release, selects the host-compatible archive, and verifies the release asset’s SHA-256 digest after download. Without `--download`, it only reports status. With `--download`, it saves the verified archive in the current directory and does not replace the running compiler or make privileged changes.
+
+### `doctor` — Inspect Tooling
+
+```
+vel doctor
+```
+
+Reports whether CMake, NASM, and the host native backend are available.
+
+### `clean` — Remove Generated Artifacts
+
+```
+vel clean <file.vel>
+```
+
+Removes generated assembly, object, and executable artifacts associated with a source file.
+
 ### `tokens` — Debug Token Stream
 
 ```
@@ -134,9 +175,9 @@ vel version
 
 **Output:**
 ```
-Vel 0.1.0
+Vel 0.3.0
 Frontend: portable C++23
-Native backends: Linux x86-64, macOS x86-64
+Native backends: Linux x86-64, macOS x86-64, Windows x86-64
 ```
 
 ---

@@ -1,0 +1,9 @@
+// Vel desktop application foundation.
+// This starter runs natively today; window/event APIs are planned for a future release.
+
+fn main() {
+    print "Vel Desktop App";
+    print "Application foundation ready";
+}
+
+main();

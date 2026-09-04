@@ -22,6 +22,8 @@ if(BUILD_TESTING AND UNIX)
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/data_type_tests.sh $<TARGET_FILE:vel>)
     add_test(NAME vel_cli_commands
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_commands.sh $<TARGET_FILE:vel>)
+    add_test(NAME vel_source_tests
+             COMMAND $<TARGET_FILE:vel> test ${CMAKE_CURRENT_SOURCE_DIR}/tests)
 endif()
 
 # Compiler warnings

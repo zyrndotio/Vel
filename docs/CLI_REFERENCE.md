@@ -59,6 +59,14 @@ vel check <file.vel>
 
 Tokenizes and parses a Vel source file without assembling or linking it. This is the recommended validation command on Windows and macOS and is also useful in editor integrations.
 
+### `test` — Check Vel Test Sources
+
+```
+vel test [path]
+```
+
+Recursively discovers `.vel` files under `tests/` when no path is provided, or under the supplied file/directory, then tokenizes, parses, and type-checks each source. This portable first version validates source fixtures; runtime assertions, test filters, and test reporting are planned for the project test system.
+
 ### `build` — Compile to Binary
 
 ```

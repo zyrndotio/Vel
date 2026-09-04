@@ -102,6 +102,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           tag="${GITHUB_REF_NAME}"
+          sha256sum dist/* > dist/SHA256SUMS.txt
           if ! gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release create "$tag" --repo "$GITHUB_REPOSITORY" \
               --title "Vel ${tag#v}" \

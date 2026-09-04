@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <algorithm>
 #include <filesystem>
 #include <cstdio>
 #include <fstream>
@@ -36,6 +37,7 @@ static void usage()
     std::cerr << "  vel build <file.vel>      compile to native binary for the host target\n";
     std::cerr << "  vel new <project>         create a starter Vel project\n";
     std::cerr << "  vel run <file.vel>       compile and run for the host target\n";
+    std::cerr << "  vel test [path]          check all .vel files in a path\n";
     std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
     std::cerr << "  vel asm   <file.vel> [target] emit target assembly\n";
     std::cerr << "                             targets: linux-x86_64, macos-x86_64, windows-x86_64\n";
@@ -317,6 +319,33 @@ static void clean_artifacts(const fs::path& input)
     }
 }
 
+static int test_sources(const fs::path& root)
+{
+    std::vector<fs::path> sources;
+    if (fs::is_regular_file(root)) {
+        if (root.extension() == ".vel") sources.push_back(root);
+    } else if (fs::is_directory(root)) {
+        for (const auto& entry : fs::recursive_directory_iterator(root)) {
+            if (entry.is_regular_file() && entry.path().extension() == ".vel")
+                sources.push_back(entry.path());
+        }
+    }
+    std::sort(sources.begin(), sources.end());
+    if (sources.empty()) {
+        std::cerr << "[Vel] No .vel test sources found in: " << root << "\n";
+        return EXIT_FAILURE;
+    }
+
+    for (const auto& source : sources) {
+        Arena arena(1024 * 1024 * 8);
+        auto prog = run_parser(run_tokenizer(read_file(source.string())), arena);
+        run_type_checker(prog);
+        std::cout << "[Vel] PASS: " << source.string() << "\n";
+    }
+    std::cout << "[Vel] Tested " << sources.size() << " source file(s).\n";
+    return EXIT_SUCCESS;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
@@ -375,6 +404,11 @@ int main(int argc, char* argv[])
         run_type_checker(prog);
         std::cout << "[Vel] OK: " << argv[2] << "\n";
         return EXIT_SUCCESS;
+    }
+
+    if (cmd == "test") {
+        fs::path root = argc >= 3 ? fs::path(argv[2]) : fs::current_path() / "tests";
+        return test_sources(root);
     }
 
     if (cmd == "asm" && argc >= 3) {

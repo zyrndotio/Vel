@@ -47,10 +47,9 @@ This document outlines the planned features and improvements for the Vel program
 
 ---
 
-## v0.2.0 — String & Array Essentials 🎯
+## v0.2.0 — String & Array Essentials ✅
 
-**Target Date**: Q2 2027
-**Estimated Features**: 6-8 weeks
+**Status**: Released September 2026 and extended by the v0.3.0 native runtime work
 **Focus**: Core data structures and operations
 
 ### Major Features
@@ -74,10 +73,10 @@ print greeting;  // "Hello World"
 
 #### 2. Array Types
 - [x] Parse and type-check homogeneous array literals and annotations
-- [x] Parse and type-check array indexing; native array storage remains planned
+- [x] Parse and type-check array indexing; native scalar-array storage, writes, append growth, and read bounds checks are implemented
 - [ ] Array length property `.len()`
 - [ ] Array iteration patterns
-- [ ] Bounds checking
+- [x] Bounds checking for native array reads and writes
 - **Priority**: High
 - **Difficulty**: High
 - **Estimated Time**: 2-3 weeks
@@ -134,9 +133,9 @@ let name = "Vel";     // inferred as str
 - [ ] Migration guide from v0.1.0
 
 ### Testing
-- [ ] Comprehensive string tests
-- [ ] Array boundary tests
-- [ ] Error message validation
+- [x] Comprehensive string concatenation and allocation regression tests
+- [x] Array boundary tests for native reads and writes
+- [ ] Error message validation with stable diagnostic codes and source snippets
 
 ---
 
@@ -148,7 +147,8 @@ let name = "Vel";     // inferred as str
 ### Release Goals
 - [x] `vel update` release metadata, digest verification, and platform-native installer handoff foundation
 - [ ] Stable project manifest and dependency model
-- [ ] `vel build`, `vel run`, `vel test`, and `vel publish` workflows
+- [x] `vel build`, `vel run`, and a portable source-checking `vel test` workflow
+- [ ] Runtime assertions, test filters, and `vel publish`
 - [ ] First-party desktop application templates for Linux, macOS, and Windows
 - [ ] Path-aware diagnostics with source snippets and actionable hints
 - [x] Cross-platform release archives and automated GitHub publishing
@@ -161,11 +161,17 @@ See [ECOSYSTEM_ROADMAP.md](docs/ECOSYSTEM_ROADMAP.md) for the editor, package-ma
 Vel should remain primarily implemented in **C++23**, with assembly limited to target-specific code generation and runtime/ABI experiments. C is appropriate for tiny portable runtime shims when C++ introduces unnecessary ABI or dependency cost. C# should be used only for optional Windows tooling or GUI utilities, not for the compiler core, because it would add a separate managed runtime and split the cross-platform compiler architecture. The near-term priority is language/runtime correctness, not rewriting the compiler in another language.
 
 ### Desktop Application Foundation
-- [ ] Application project template and manifest metadata
+- [x] Starter application project template and basic manifest metadata
 - [ ] Window/event abstraction with native backends
 - [ ] Resource bundling and platform-specific application packaging
 - [ ] Cross-platform filesystem and process APIs
 - [ ] Example desktop application built from Vel source
+
+### Roadmap audit — September 2026
+
+The v0.3.0 implementation delivered native string allocation, dynamic scalar arrays, indexed mutation, append growth, nested aggregate runtime behavior, struct layout/access, aggregate calls, allocation-failure paths, and Linux/macOS/Windows x86-64 release validation. These items are now reflected as completed above rather than remaining as planned work.
+
+The language is ready today for native command-line tools, application cores, data-processing programs, and other programs that fit the supported language and target ABI. It is **not yet a complete desktop GUI platform**: Vel does not currently ship a stable window/event/drawing API, module and dependency system, formatter, language server, debugger, resource bundler, or native `.app`/`.deb`/Windows application packaging workflow. Those capabilities are required before claiming a turnkey creative desktop-application experience.
 
 ### Update and Release Security
 - [ ] Signed release manifest and key rotation policy

@@ -26,9 +26,9 @@ Vel is a systems programming language that prioritizes:
 
 Perfect for applications that need to be fast, maintainable, and reliable.
 
-> **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain.
+> **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain. Vel can build native console/application-core programs today, but a stable first-party windowing and event API is still on the roadmap.
 
-See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), and [runtime ABI](docs/RUNTIME_ABI.md) for details.
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), and [runtime ABI](docs/RUNTIME_ABI.md) for details.
 
 ---
 
@@ -72,7 +72,7 @@ Windows WiX generator is an optional alternative and requires WiX separately.
 
 # Compile to a native binary for the host target
 ./vel build examples/hello.vel
-./hello  # Run the binary
+./examples/hello  # Run the generated binary on Linux/macOS
 
 # Emit Windows PE/COFF assembly from any host
 ./vel asm examples/hello.vel windows-x86_64 > hello-windows.asm
@@ -298,6 +298,7 @@ See [examples/](examples/) for more programs.
 vel <file.vel>          Compile to assembly and display output
 vel build <file.vel>    Compile to native binary (Linux only)
 vel asm <file.vel>      Generate assembly file (.asm)
+vel test [path]         Check Vel test sources
 vel tokens <file.vel>   Debug: print token stream
 vel version             Display compiler version
 ```

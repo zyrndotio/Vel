@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.3.0 (Released)
+**Current Version**: 0.3.1 (Released)
 **Target Version**: 1.0.0 (Full Release)
 
 ---

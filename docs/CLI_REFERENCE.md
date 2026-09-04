@@ -183,7 +183,7 @@ vel version
 
 **Output:**
 ```
-Vel 0.3.0
+Vel 0.3.1
 Frontend: portable C++23
 Native backends: Linux x86-64, macOS x86-64, Windows x86-64
 ```

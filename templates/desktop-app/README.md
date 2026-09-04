@@ -1,6 +1,6 @@
 # Vel Desktop App Template
 
-This is a minimal cross-platform Vel application foundation. It is intentionally limited to the stable Vel 0.3.0 language and compiler surface, so it can be checked and built on supported desktop targets today.
+This is a minimal cross-platform Vel application foundation. It is intentionally limited to the stable Vel 0.3.1 language and compiler surface, so it can be checked and built on supported desktop targets today.
 
 ## Commands
 

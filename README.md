@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.3.0-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
+[![Compiler Version](https://img.shields.io/badge/version-0.3.1-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
 
 </div>
 
@@ -322,7 +322,7 @@ vel version             Display compiler version
 
 ## 🛣️ Roadmap
 
-### Current (v0.3.0) ✅
+### Current (v0.3.1) ✅
 - [x] Variables (`let` / `mut`)
 - [x] Basic types (`int`, `float`, `str`, `bool`)
 - [x] Arithmetic & comparison operators
@@ -335,6 +335,7 @@ vel version             Display compiler version
 - [x] Arrays, structs, and string concatenation in the parser/type checker
 - [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] `vel new`, `vel run`, `vel doctor`, and `vel clean`
+- [x] Portable `vel test` source validation workflow
 
 ### Completed (v0.3.0) 🚀
 - [x] Initial native string allocation ABI and large-concatenation runtime test

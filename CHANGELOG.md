@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.3.1] - 2026-09-04
+
+### Added
+- Added `vel test [path]`, a portable source-validation command that recursively discovers `.vel` files, tokenizes them, parses them, and runs the type checker. With no path, the command checks the project's `tests/` directory; a file or directory can be supplied for focused validation.
+- Added CTest coverage for the `vel test` workflow. The default test suite now includes five Vel source fixtures in addition to the existing compiler and CLI regression tests.
+- Added a cross-platform desktop application starter under `templates/desktop-app/`, including a `vel.toml` manifest, a stable-language `src/main.vel` entry point, a project README, and generated-artifact cleanup rules.
+- Added `docs/DESKTOP_QUICKSTART.md`, which documents installation, project creation, source checking, native builds, and host execution on supported desktop targets.
+
+### Changed
+- Updated the compiler, CMake project, README badge, generated project manifests, and release comparison logic to report version `0.3.1`.
+- Added SHA-256 checksum generation to the GitHub Actions release publication job so each future cross-platform release includes `SHA256SUMS.txt` alongside its archives and installers.
+- Updated the roadmap and CLI reference to distinguish the delivered portable source-test workflow from future runtime assertions, filters, and publishing commands.
+
+### Validation
+- Verified the C++23 compiler build and all six CTest entries on Linux x86-64.
+- Verified `vel test tests` across aggregate, control-flow, data-type, and function-contract fixtures.
+- Verified the desktop starter with `vel check`, native build, and execution on the host target.
+- Preserved the current platform boundary: native x86-64 Linux, macOS, and Windows support is available, while ARM64 backends and a first-party GUI/windowing API remain planned.
+
 ## [0.3.0] - 2026-09-04
 
 ### Added

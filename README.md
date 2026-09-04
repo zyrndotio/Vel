@@ -380,8 +380,7 @@ Vel is released under the [GNU General Public License v3.0](LICENSE).
 ## 📊 Project Stats
 
 - **Language**: C++23
-- **Lines of Code**: ~2,500
-- **Compilation Time**: < 1 second
+- **Compilation Time**: few seconds
 - **Compiler Size**: ~2 MB
 - **Build System**: CMake (optional)
 

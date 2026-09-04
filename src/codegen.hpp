@@ -244,7 +244,7 @@ private:
             auto& elements = std::get<ExprArray*>(expr->var)->elements;
             std::vector<std::string> values;
             for (auto* element : elements) values.push_back(static_value(element));
-            m_data << label << " dq " << values.size() << "\n";
+            m_data << label << " dq " << values.size() << "," << values.size() << "," << label << "_data\n";
             m_data << label << "_data dq ";
             for (size_t i = 0; i < values.size(); ++i) {
                 if (i) m_data << ",";
@@ -438,6 +438,11 @@ vel_concat:
 
         if (m_target == CodeGenTarget::WindowsX86_64) {
             emit_line(R"(
+vel_alloc_fail:
+    mov ecx, 2
+    sub rsp, 40
+    call ExitProcess
+    hlt
 vel_bounds_fail:
     mov ecx, 1
     sub rsp, 40
@@ -446,6 +451,11 @@ vel_bounds_fail:
             )");
         } else if (m_target == CodeGenTarget::MacOSX86_64) {
             emit_line(R"(
+vel_alloc_fail:
+    mov eax, 0x2000001
+    mov edi, 2
+    syscall
+    hlt
 vel_bounds_fail:
     mov eax, 0x2000001
     mov edi, 1
@@ -454,6 +464,11 @@ vel_bounds_fail:
             )");
         } else {
             emit_line(R"(
+vel_alloc_fail:
+    mov eax, 60
+    mov edi, 2
+    syscall
+    hlt
 vel_bounds_fail:
     mov eax, 60
     mov edi, 1
@@ -824,10 +839,23 @@ vel_print_newline:
 
     void gen_expr_node(ExprArray* n)
     {
-        Expr wrapper;
-        wrapper.var = n;
-        emit_line("    mov rax, " + static_value(&wrapper));
+        const auto count = n->elements.size();
+        const auto bytes = 24 + count * 8;
+        emit_line("    mov rdi, " + std::to_string(bytes));
+        emit_line("    call vel_alloc");
+        emit_line("    test rax, rax");
+        emit_line("    jz vel_alloc_fail");
+        emit_line("    mov QWORD [rax], " + std::to_string(count));
+        emit_line("    mov QWORD [rax + 8], " + std::to_string(count));
+        emit_line("    lea rcx, [rax + 24]");
+        emit_line("    mov QWORD [rax + 16], rcx");
         stack_push("rax");
+        for (size_t i = 0; i < count; ++i) {
+            gen_expr(n->elements[i]);
+            stack_pop("rax");
+            emit_line("    mov rcx, QWORD [rsp]");
+            emit_line("    mov QWORD [rcx + " + std::to_string(24 + i * 8) + "], rax");
+        }
     }
     void gen_expr_node(ExprIndex* n)
     {
@@ -839,7 +867,8 @@ vel_print_newline:
         emit_line("    jl vel_bounds_fail");
         emit_line("    cmp rbx, QWORD [rax]");
         emit_line("    jae vel_bounds_fail");
-        emit_line("    mov rax, QWORD [rax + rbx * 8 + 8]");
+        emit_line("    mov rcx, QWORD [rax + 16]");
+        emit_line("    mov rax, QWORD [rcx + rbx * 8]");
         stack_push("rax");
     }
     void gen_expr_node(ExprField* n)

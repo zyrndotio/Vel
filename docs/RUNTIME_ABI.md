@@ -4,7 +4,7 @@ This document records the initial native runtime contract for Vel aggregate valu
 
 ## Value model
 
-Scalar values currently occupy one 64-bit stack slot. String expressions evaluate to a pointer to a NUL-terminated byte buffer. The initial native array representation is a read-only static header containing a 64-bit element count followed by 64-bit element slots. Full dynamic array storage, struct layout, and ownership semantics remain in progress.
+Scalar values currently occupy one 64-bit stack slot. String expressions evaluate to a pointer to a NUL-terminated byte buffer. The initial native array representation is a three-word header containing length, capacity, and a data pointer, followed by 64-bit element slots. Array literals now allocate this storage dynamically. Resizing, mutation, struct layout, and ownership semantics remain in progress.
 
 String literals are emitted into the target data section. String concatenation allocates a fresh buffer whose size is `length(lhs) + length(rhs) + 1`, copies both operands, appends a NUL terminator, and returns the new pointer. This replaces the former fixed 64 KiB global concatenation buffer.
 
@@ -28,13 +28,13 @@ The current foundation intentionally does not reclaim concatenation buffers. Own
 
 ## Remaining ABI work
 
-The next runtime phase must add explicit string length metadata, dynamic array headers containing data pointer/length/capacity, shared struct size/alignment/field-offset computation, aggregate copy semantics, allocation-failure diagnostics, and a defined ownership or reclamation policy. These changes must preserve equivalent behavior on Linux, macOS, and Windows.
+The next runtime phase must add explicit string length metadata, array resizing and mutation, shared struct size/alignment/field-offset computation, aggregate copy semantics, allocation-failure diagnostics, and a defined ownership or reclamation policy. These changes must preserve equivalent behavior on Linux, macOS, and Windows.
 
 ## Verification
 
 The native data-type test suite now includes a concatenation larger than the previous 64 KiB fixed buffer. It verifies that the generated program produces all expected bytes and a final newline. The fixture is executed on Linux x86-64 and cross-target assembly generation remains covered by the target tests.
 
-> This document describes the v0.3.0 foundation, not a completed aggregate runtime. Array reads now perform native lower- and upper-bound checks, but dynamic arrays, mutable aggregate writes, complete struct layout, ownership, and full string methods remain release-blocking work.
+> This document describes the v0.3.0 foundation, not a completed aggregate runtime. Array literals now allocate length/capacity/data-pointer headers and reads perform native lower- and upper-bound checks, but resizing, mutable aggregate writes, complete struct layout, ownership, and full string methods remain release-blocking work.
 
 ---
 

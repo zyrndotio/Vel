@@ -335,7 +335,8 @@ vel version             Display compiler version
 ### In Progress (v0.3.0) 🚀
 - [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] Initial native array headers and bounds checks for reads
-- [ ] Dynamic array storage with length/capacity metadata
+- [x] Initial dynamic array storage with length/capacity metadata
+- [ ] Array resizing and mutation semantics
 - [ ] Complete struct layout, nested aggregate access, and mutable field writes
 - [ ] String methods, explicit length metadata, and improved diagnostics
 - [ ] Aggregate function parameters and return values

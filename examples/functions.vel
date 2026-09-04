@@ -1,0 +1,16 @@
+// Vel functions demo
+// Clean, readable fn syntax with optional type annotations
+
+fn add(a: int, b: int) -> int {
+    return a + b;
+}
+
+fn square(x: int) -> int {
+    return x * x;
+}
+
+let result = add(3, 4);
+print result;
+
+let sq = square(9);
+print sq;

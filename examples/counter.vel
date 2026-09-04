@@ -1,0 +1,16 @@
+// Vel counter demo
+// Demonstrates: mut variables, while loops, if/elif/else, arithmetic
+
+mut count = 0;
+let limit = 5;
+
+while (count < limit) {
+    print count;
+    count = count + 1;
+}
+
+if (count == 5) {
+    print 1;  // "done" — string print from ident coming soon
+} else {
+    print 0;
+}

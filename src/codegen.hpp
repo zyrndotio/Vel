@@ -541,59 +541,66 @@ vel_print_newline:
         emit_line(end_label + ":");
     }
 
+        // Emit cleanup for scopes that will be bypassed by a control-flow jump.
+    // This does not mutate the compile-time stack model because the jump ends
+    // the current path; normal fall-through still uses the existing model.
+    void emit_scope_cleanup(size_t target_depth)
+    {
+        if (target_depth > m_scopes.size()) return;
+        size_t slots = 0;
+        for (size_t i = target_depth; i < m_scopes.size(); ++i)
+            slots += m_scopes[i].size();
+        if (slots > 0)
+            emit_line("    add rsp, " + std::to_string(slots * 8));
+    }
+
     void gen_stmt_node(StmtWhile* n)
     {
-        std::string cond_label = new_label();
-        std::string end_label  = new_label();
-
-        m_loop_end_labels.push_back(end_label);
-
-        emit_line(cond_label + ":");
+        LoopLabels loop {new_label(), new_label(), m_scopes.size()};
+        m_loops.push_back(loop);
+        emit_line(loop.continue_label + ":");
         gen_expr(n->cond);
         stack_pop("rax");
         emit_line("    test rax, rax");
-        emit_line("    jz " + end_label);
-
+        emit_line("    jz " + loop.break_label);
         push_scope();
         for (auto* s : n->body->stmts) gen_stmt(s);
         pop_scope();
-
-        emit_line("    jmp " + cond_label);
-        emit_line(end_label + ":");
-        m_loop_end_labels.pop_back();
+        emit_line("    jmp " + loop.continue_label);
+        emit_line(loop.break_label + ":");
+        m_loops.pop_back();
     }
-
     void gen_stmt_node(StmtLoop* n)
     {
-        std::string top_label = new_label();
-        std::string end_label = new_label();
-
-        m_loop_end_labels.push_back(end_label);
-
-        emit_line(top_label + ":");
+        LoopLabels loop {new_label(), new_label(), m_scopes.size()};
+        m_loops.push_back(loop);
+        emit_line(loop.continue_label + ":");
         push_scope();
         for (auto* s : n->body->stmts) gen_stmt(s);
         pop_scope();
-        emit_line("    jmp " + top_label);
-        emit_line(end_label + ":");
-        m_loop_end_labels.pop_back();
+        emit_line("    jmp " + loop.continue_label);
+        emit_line(loop.break_label + ":");
+        m_loops.pop_back();
     }
-
     void gen_stmt_node(StmtBreak*)
     {
-        if (m_loop_end_labels.empty()) {
+        if (m_loops.empty()) {
             std::cerr << "[Vel] break used outside of a loop\n";
             exit(EXIT_FAILURE);
         }
-        emit_line("    jmp " + m_loop_end_labels.back());
+        const auto& loop = m_loops.back();
+        emit_scope_cleanup(loop.scope_depth);
+        emit_line("    jmp " + loop.break_label);
     }
-
     void gen_stmt_node(StmtContinue*)
     {
-        // Continue: jump to just before pop_scope — not supported cleanly without
-        // a continue label stack. Emit error for now.
-        std::cerr << "[Vel] continue not yet fully supported in this build\n";
-        exit(EXIT_FAILURE);
+        if (m_loops.empty()) {
+            std::cerr << "[Vel] continue used outside of a loop\n";
+            exit(EXIT_FAILURE);
+        }
+        const auto& loop = m_loops.back();
+        emit_scope_cleanup(loop.scope_depth);
+        emit_line("    jmp " + loop.continue_label);
     }
 
     void gen_stmt_node(StmtScope* n)
@@ -651,6 +658,12 @@ vel_print_newline:
 
     Program           m_prog;
     std::stringstream m_out;
-    std::vector<std::string> m_loop_end_labels;
+    struct LoopLabels {
+        std::string continue_label;
+        std::string break_label;
+        size_t      scope_depth;
+    };
+
+    std::vector<LoopLabels> m_loops;
     std::unordered_map<std::string, std::string> m_fn_params;
 };

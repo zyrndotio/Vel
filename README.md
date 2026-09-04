@@ -69,6 +69,9 @@ Windows WiX generator is an optional alternative and requires WiX separately.
 ./vel build examples/hello.vel
 ./hello  # Run the binary
 
+# Validate syntax without native tools (works on Windows/macOS/Linux)
+./vel check examples/hello.vel
+
 # Debug token stream
 ./vel tokens examples/hello.vel
 ```
@@ -160,13 +163,14 @@ while (i < 5) {
     i = i + 1;
 }
 
-// Infinite loop with break
+// Infinite loop with break and continue
 loop {
     if (condition) {
         break;
     }
 }
-```
+
+// `continue` is supported in while and loop bodies.
 
 ### Operators
 
@@ -207,7 +211,9 @@ Vel/
 ├── CMakeLists.txt     # Build configuration
 ├── README.md          # This file
 ├── CHANGELOG.md       # Version history
-└── LICENSE            # GPL-3.0
+├── tests/              # Cross-platform smoke tests
+├── .github/workflows/  # Linux/macOS/Windows CI
+├── LICENSE            # GPL-3.0
 
 ```
 
@@ -215,7 +221,7 @@ Vel/
 
 ## 🏗️ Architecture
 
-The Vel compiler is a single-pass compiler that directly generates x86-64 Linux assembly:
+The Vel compiler has a portable frontend (tokenizer, parser, syntax checking, and NASM emission) and an x86-64 Linux native backend. The frontend builds and runs on Windows, macOS, and Linux; native program execution currently requires Linux x86-64 plus NASM and GNU binutils. CI verifies the portable frontend on all three desktop operating systems.
 
 ```
 Source Code (.vel)

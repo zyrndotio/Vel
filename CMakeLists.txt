@@ -10,6 +10,12 @@ add_executable(vel
 
 target_include_directories(vel PRIVATE src)
 
+include(CTest)
+if(BUILD_TESTING AND UNIX)
+    add_test(NAME vel_frontend_smoke
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/smoke.sh $<TARGET_FILE:vel>)
+endif()
+
 # Compiler warnings
 if (MSVC)
     target_compile_options(vel PRIVATE /W4)

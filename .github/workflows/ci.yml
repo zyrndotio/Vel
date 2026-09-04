@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Portable frontend smoke tests (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          ./build/vel version
+          ./build/vel check examples/hello.vel
+          ./build/vel check examples/counter.vel
+          ./build/vel check examples/functions.vel
+          ./build/vel asm examples/hello.vel > /tmp/hello.asm
+          test -s /tmp/hello.asm
+
+      - name: Portable frontend smoke tests (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\build\Release\vel.exe version
+          .\build\Release\vel.exe check examples\hello.vel
+          .\build\Release\vel.exe check examples\counter.vel
+          .\build\Release\vel.exe check examples\functions.vel
+          .\build\Release\vel.exe asm examples\hello.vel | Out-File -Encoding utf8 hello.asm
+          if ((Get-Item hello.asm).Length -eq 0) { throw 'Assembly output is empty' }
+
+      - name: Install Linux native toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y nasm binutils
+
+      - name: Linux native backend smoke test
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          ./build/vel build examples/hello.vel
+          ./examples/hello | grep -Fx 'Hello from Vel!'
+          rm -f examples/hello

@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Added a portable `vel check` command for syntax validation without NASM or a host linker.
+- Added CTest smoke coverage and GitHub Actions builds for Linux, macOS, and Windows.
+- Added a clearer runtime capability report to `vel version`.
+
+### Changed
+- Native compilation now writes generated artifacts beside the input `.vel` file and safely quotes paths.
+- Native compilation now reports its Linux x86-64 limitation explicitly on other hosts.
+- Implemented `continue` for `while` and `loop`, including stack cleanup for skipped scopes.
+
 ### Planned
 - String concatenation with `+` operator
 - Array types and indexing

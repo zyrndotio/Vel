@@ -35,13 +35,21 @@ global _start
 ; ... assembly code ...
 ```
 
+### `check` — Validate Without Native Tools
+
+```
+vel check <file.vel>
+```
+
+Tokenizes and parses a Vel source file without assembling or linking it. This is the recommended validation command on Windows and macOS and is also useful in editor integrations.
+
 ### `build` — Compile to Binary
 
 ```
 vel build <file.vel>
 ```
 
-Compiles a Vel program to a native binary executable (Linux only).
+Compiles a Vel program to a native binary executable on Linux x86-64.
 
 **Requirements:**
 - NASM (assembler)
@@ -55,15 +63,13 @@ vel build examples/hello.vel
 ```
 
 **Output Files:**
-- `program.asm` - Generated assembly
-- `program.o` - Object file
-- `program` - Executable binary
+- `program.asm` - Temporary generated assembly, removed after a successful build
+- `program.o` - Temporary object file, removed after a successful build
+- `program` - Executable binary written beside the input `.vel` file
 
 **On Windows/macOS:**
-```
-[Vel] Assembling with NASM...
-Error: ld command failed
-```
+
+The command exits with a clear unsupported-backend message. Use `vel check`, `vel tokens`, or `vel asm` on those hosts until native PE/COFF and Mach-O backends are available.
 
 ### `asm` — Generate Assembly Only
 

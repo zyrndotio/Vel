@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -28,11 +29,22 @@ static void usage()
 {
     std::cerr << "Vel Programming Language Compiler\n";
     std::cerr << "Usage:\n";
-    std::cerr << "  vel <file.vel>            compile and run\n";
-    std::cerr << "  vel build <file.vel>      compile to native binary\n";
-    std::cerr << "  vel asm   <file.vel>      emit assembly only\n";
+    std::cerr << "  vel <file.vel>            compile and run (Linux x86-64)\n";
+    std::cerr << "  vel build <file.vel>      compile to native binary (Linux x86-64)\n";
+    std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
+    std::cerr << "  vel asm   <file.vel>      emit NASM assembly\n";
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
     std::cerr << "  vel version               print version\n";
+    std::cerr << "  vel help                  show this help\n";
+}
+
+static bool native_backend_available()
+{
+#if defined(__linux__) && defined(__x86_64__)
+    return true;
+#else
+    return false;
+#endif
 }
 
 static std::vector<Token> run_tokenizer(const std::string& src)
@@ -53,18 +65,47 @@ static std::string run_codegen(Program prog)
     return gen.generate();
 }
 
+static std::string shell_quote(const std::string& value)
+{
+#if defined(_WIN32)
+    std::string quoted = "\\\"";
+    for (char c : value) {
+        if (c == '\"') quoted += "\\\\\"";
+        else quoted += c;
+    }
+    return quoted + "\\\"";
+#else
+    std::string quoted = "'";
+    for (char c : value) {
+        if (c == '\'') quoted += "'\\''";
+        else quoted += c;
+    }
+    return quoted + "'";
+#endif
+}
+
 static std::string compile(const std::string& vel_path, bool verbose = false)
 {
+    if (!native_backend_available()) {
+        std::cerr << "[Vel] Native compilation is currently available only on Linux x86-64.\n"
+                  << "[Vel] Use 'vel check' or 'vel asm' on this host.\n";
+        exit(EXIT_FAILURE);
+    }
+
     fs::path in(vel_path);
     if (!in.has_extension() || in.extension() != ".vel") {
         std::cerr << "[Vel] Input file must have .vel extension\n";
         exit(EXIT_FAILURE);
     }
 
-    std::string stem    = in.stem().string();
-    std::string asm_out = stem + ".asm";
-    std::string obj_out = stem + ".o";
-    std::string bin_out = stem;
+    fs::path out_dir = in.parent_path().empty() ? fs::current_path() : in.parent_path();
+    std::string stem = in.stem().string();
+    fs::path asm_path = out_dir / (stem + ".asm");
+    fs::path obj_path = out_dir / (stem + ".o");
+    fs::path bin_path = out_dir / stem;
+    std::string asm_out = asm_path.string();
+    std::string obj_out = obj_path.string();
+    std::string bin_out = bin_path.string();
 
     std::string src = read_file(vel_path);
 
@@ -85,14 +126,14 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     }
 
     if (verbose) std::cerr << "[Vel] Assembling with NASM...\n";
-    std::string nasm_cmd = "nasm -f elf64 " + asm_out + " -o " + obj_out;
+    std::string nasm_cmd = "nasm -f elf64 " + shell_quote(asm_out) + " -o " + shell_quote(obj_out);
     if (system(nasm_cmd.c_str()) != 0) {
         std::cerr << "[Vel] Assembly failed\n";
         exit(EXIT_FAILURE);
     }
 
     if (verbose) std::cerr << "[Vel] Linking...\n";
-    std::string ld_cmd = "ld -o " + bin_out + " " + obj_out;
+    std::string ld_cmd = "ld -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
     if (system(ld_cmd.c_str()) != 0) {
         std::cerr << "[Vel] Linking failed\n";
         exit(EXIT_FAILURE);
@@ -113,9 +154,15 @@ int main(int argc, char* argv[])
 
     std::string cmd = argv[1];
 
+    if (cmd == "help" || cmd == "--help" || cmd == "-h") {
+        usage();
+        return EXIT_SUCCESS;
+    }
+
     if (cmd == "version") {
-        std::cout << "Vel 0.1.0 — Early Build\n";
-        std::cout << "Target: x86-64 Linux (Windows/macOS cross-compile coming)\n";
+        std::cout << "Vel 0.1.0\n";
+        std::cout << "Frontend: portable C++23\n";
+        std::cout << "Native backend: x86-64 Linux" << (native_backend_available() ? " (available)" : " (unavailable on this host)") << "\n";
         return EXIT_SUCCESS;
     }
 
@@ -131,6 +178,14 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
+    if (cmd == "check" && argc >= 3) {
+        auto src = read_file(argv[2]);
+        Arena arena(1024 * 1024 * 8);
+        run_parser(run_tokenizer(src), arena);
+        std::cout << "[Vel] OK: " << argv[2] << "\n";
+        return EXIT_SUCCESS;
+    }
+
     if (cmd == "asm" && argc >= 3) {
         Arena arena(1024 * 1024 * 8);
         auto src  = read_file(argv[2]);
@@ -143,13 +198,13 @@ int main(int argc, char* argv[])
 
     if (cmd == "build" && argc >= 3) {
         auto bin = compile(argv[2], /*verbose=*/true);
-        std::cout << "[Vel] Built: ./" << bin << "\n";
+        std::cout << "[Vel] Built: " << bin << "\n";
         return EXIT_SUCCESS;
     }
 
     if (argc == 2 && cmd.size() >= 4 && cmd.compare(cmd.size() - 4, 4, ".vel") == 0) {
         auto bin = compile(cmd);
-        int ret  = system(("./" + bin).c_str());
+        int ret = system(shell_quote(bin).c_str());
         std::remove(bin.c_str());
         return ret;
     }

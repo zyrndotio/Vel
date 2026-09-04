@@ -120,6 +120,9 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 
 ### macOS
 
+For platform capability details, see [PLATFORM_SUPPORT.md](PLATFORM_SUPPORT.md). The compiler frontend builds on macOS, while native Vel binary generation remains planned.
+
+
 ```bash
 # Install Xcode Command Line Tools
 xcode-select --install
@@ -151,9 +154,12 @@ After building, verify everything works:
 # Test 3: Generate assembly
 ./vel asm examples/hello.vel
 
-# Test 4: Compile to binary (Linux only)
+# Test 4: Validate without native tools (all desktop OSes)
+./vel check examples/hello.vel
+
+# Test 5: Compile to a binary (Linux x86-64 only)
 ./vel build examples/hello.vel
-./hello  # Run the generated binary
+./examples/hello  # Run the generated binary
 ```
 
 All tests should complete without errors.

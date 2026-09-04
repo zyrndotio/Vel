@@ -36,6 +36,7 @@ public:
             emit_line("extern ExitProcess");
             emit_line("extern WriteFile");
             emit_line("extern GetStdHandle");
+            emit_line("extern VirtualAlloc");
         } else {
             emit_line("section .text");
             emit_line("global _start");
@@ -243,7 +244,8 @@ private:
             auto& elements = std::get<ExprArray*>(expr->var)->elements;
             std::vector<std::string> values;
             for (auto* element : elements) values.push_back(static_value(element));
-            m_data << label << " dq ";
+            m_data << label << " dq " << values.size() << "\n";
+            m_data << label << "_data dq ";
             for (size_t i = 0; i < values.size(); ++i) {
                 if (i) m_data << ",";
                 m_data << values[i];
@@ -274,6 +276,16 @@ private:
     {
         if (m_target == CodeGenTarget::WindowsX86_64) {
             emit_line(R"(
+; vel_alloc: rdi = byte count, returns pointer in rax or zero
+vel_alloc:
+    mov rdx, rdi
+    xor ecx, ecx
+    mov r8d, 0x3000
+    mov r9d, 4
+    sub rsp, 40
+    call VirtualAlloc
+    add rsp, 40
+    ret
 vel_print_cstr:
     mov rdi, rsi
     xor rdx, rdx
@@ -287,43 +299,85 @@ vel_print_cstr:
     jmp vel_print_str
 vel_concat:
     push r12
-    mov r8, rdi
-    mov r9, rsi
-    xor r10, r10
+    push r13
+    push r14
+    push r15
+    mov r12, rdi
+    mov r13, rsi
+    xor r14, r14
 .len1:
-    cmp byte [r8 + r10], 0
+    cmp byte [r12 + r14], 0
     je .len2_start
-    inc r10
+    inc r14
     jmp .len1
 .len2_start:
-    xor r11, r11
+    xor r15, r15
 .len2:
-    cmp byte [r9 + r11], 0
-    je .copy
-    inc r11
+    cmp byte [r13 + r15], 0
+    je .allocate
+    inc r15
     jmp .len2
-.copy:
-    mov rax, [rel vel_concat_next]
+.allocate:
+    mov rdi, r14
+    add rdi, r15
+    inc rdi
+    call vel_alloc
     test rax, rax
-    jnz .have_buf
-    lea rax, [rel vel_concat_buf]
-.have_buf:
+    jz .done
+    mov rdx, rax
     mov rdi, rax
-    mov r12, rax
-    mov rsi, r8
-    mov rcx, r10
+    mov rsi, r12
+    mov rcx, r14
     rep movsb
-    mov rsi, r9
-    mov rcx, r11
+    mov rsi, r13
+    mov rcx, r15
     rep movsb
     mov byte [rdi], 0
-    inc rdi
-    mov [rel vel_concat_next], rdi
-    mov rax, r12
+    mov rax, rdx
+.done:
+    pop r15
+    pop r14
+    pop r13
     pop r12
     ret
             )");
         } else {
+            const bool mac = m_target == CodeGenTarget::MacOSX86_64;
+            emit_line(mac ? R"(
+; vel_alloc: rdi = byte count, returns pointer in rax or zero
+vel_alloc:
+    mov rsi, rdi
+    xor edi, edi
+    mov edx, 3
+    mov r10d, 0x1002
+    mov r8, -1
+    xor r9d, r9d
+    mov eax, 0x20000c5
+    syscall
+    cmp rax, -1
+    je .fail
+    ret
+.fail:
+    xor eax, eax
+    ret
+)" : R"(
+; vel_alloc: rdi = byte count, returns pointer in rax or zero
+vel_alloc:
+    mov rsi, rdi
+    xor edi, edi
+    mov edx, 3
+    mov r10d, 34
+    mov r8, -1
+    xor r9d, r9d
+    mov eax, 9
+    syscall
+    cmp rax, -1
+    je .fail
+    ret
+.fail:
+    xor eax, eax
+    ret
+)");
             emit_line(R"(
 vel_print_cstr:
     mov rdi, rsi
@@ -338,41 +392,73 @@ vel_print_cstr:
     jmp vel_print_str
 vel_concat:
     push r12
-    mov r8, rdi
-    mov r9, rsi
-    xor r10, r10
+    push r13
+    push r14
+    push r15
+    mov r12, rdi
+    mov r13, rsi
+    xor r14, r14
 .len1:
-    cmp byte [r8 + r10], 0
+    cmp byte [r12 + r14], 0
     je .len2_start
-    inc r10
+    inc r14
     jmp .len1
 .len2_start:
-    xor r11, r11
+    xor r15, r15
 .len2:
-    cmp byte [r9 + r11], 0
-    je .copy
-    inc r11
+    cmp byte [r13 + r15], 0
+    je .allocate
+    inc r15
     jmp .len2
-.copy:
-    mov rax, [rel vel_concat_next]
+.allocate:
+    mov rdi, r14
+    add rdi, r15
+    inc rdi
+    call vel_alloc
     test rax, rax
-    jnz .have_buf
-    lea rax, [rel vel_concat_buf]
-.have_buf:
+    jz .done
+    mov rdx, rax
     mov rdi, rax
-    mov r12, rax
-    mov rsi, r8
-    mov rcx, r10
+    mov rsi, r12
+    mov rcx, r14
     rep movsb
-    mov rsi, r9
-    mov rcx, r11
+    mov rsi, r13
+    mov rcx, r15
     rep movsb
     mov byte [rdi], 0
-    inc rdi
-    mov [rel vel_concat_next], rdi
-    mov rax, r12
+    mov rax, rdx
+.done:
+    pop r15
+    pop r14
+    pop r13
     pop r12
     ret
+            )");
+        }
+
+        if (m_target == CodeGenTarget::WindowsX86_64) {
+            emit_line(R"(
+vel_bounds_fail:
+    mov ecx, 1
+    sub rsp, 40
+    call ExitProcess
+    hlt
+            )");
+        } else if (m_target == CodeGenTarget::MacOSX86_64) {
+            emit_line(R"(
+vel_bounds_fail:
+    mov eax, 0x2000001
+    mov edi, 1
+    syscall
+    hlt
+            )");
+        } else {
+            emit_line(R"(
+vel_bounds_fail:
+    mov eax, 60
+    mov edi, 1
+    syscall
+    hlt
             )");
         }
     }
@@ -532,8 +618,6 @@ vel_print_newline:
         m_data << "vel_newline db 10\n";
         m_data << "vel_true_str db \"true\"\n";
         m_data << "vel_false_str db \"false\"\n";
-        m_bss << "vel_concat_buf resb 65536\n";
-        m_bss << "vel_concat_next resq 1\n";
         if (m_target == CodeGenTarget::WindowsX86_64) {
             m_bss << "vel_stdout_handle resq 1\n";
         }
@@ -751,7 +835,11 @@ vel_print_newline:
         gen_expr(n->index);
         stack_pop("rbx");
         stack_pop("rax");
-        emit_line("    mov rax, QWORD [rax + rbx * 8]");
+        emit_line("    cmp rbx, 0");
+        emit_line("    jl vel_bounds_fail");
+        emit_line("    cmp rbx, QWORD [rax]");
+        emit_line("    jae vel_bounds_fail");
+        emit_line("    mov rax, QWORD [rax + rbx * 8 + 8]");
         stack_push("rax");
     }
     void gen_expr_node(ExprField* n)

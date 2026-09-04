@@ -28,7 +28,7 @@ Perfect for applications that need to be fast, maintainable, and reliable.
 
 > **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain.
 
-See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), and [update design](docs/UPDATE_DESIGN.md) for details.
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), and [runtime ABI](docs/RUNTIME_ABI.md) for details.
 
 ---
 
@@ -121,7 +121,7 @@ The generated package format depends on the platform:
 
 ## 📚 Language Features
 
-The parser and type checker currently support scalar values plus frontend validation for homogeneous arrays, array indexing, named structs, struct literals, field access, and string concatenation. Native aggregate layout and runtime string-buffer emission are the next compiler stage.
+The parser and type checker currently support scalar values plus frontend validation for homogeneous arrays, array indexing, named structs, struct literals, field access, and string concatenation. The native runtime foundation now includes exact-size string concatenation allocation; complete array/struct layout, ownership, and bounds checks remain in progress.
 
 ### Variables & Types
 
@@ -329,6 +329,7 @@ vel version             Display compiler version
 - [x] Assembly code generation
 - [x] Cross-platform targets and release packaging
 - [x] Arrays, structs, and string concatenation in the parser/type checker
+- [x] Initial native string allocation ABI and large-concatenation runtime test
 - [x] `vel new`, `vel run`, `vel doctor`, and `vel clean`
 
 ### Planned (v0.2.1) 🚀

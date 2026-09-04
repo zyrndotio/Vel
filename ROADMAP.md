@@ -58,7 +58,7 @@ This document outlines the planned features and improvements for the Vel program
 #### 1. String Operations
 - [x] Plan: String concatenation with `+`
 - [x] Plan: String comparison (==, !=, etc.)
-- [x] Parse and type-check string concatenation; native string-buffer emission remains planned
+- [x] Parse and type-check string concatenation; initial native length-aware allocation and concatenation implemented
 - [ ] Add string escape sequences (\n, \t, etc.)
 - [ ] Implement string methods (.len(), .substr())
 - [ ] Add character type support
@@ -125,7 +125,7 @@ let name = "Vel";     // inferred as str
 
 ### Compiler Improvements
 - [ ] Better code generation for arrays
-- [ ] Optimize string operations
+- [ ] Add explicit string length metadata and optimize string operations
 - [ ] Improve error recovery
 
 ### Documentation
@@ -152,6 +152,8 @@ let name = "Vel";     // inferred as str
 - [ ] First-party desktop application templates for Linux, macOS, and Windows
 - [ ] Path-aware diagnostics with source snippets and actionable hints
 - [ ] Reproducible release archives with checksums and provenance metadata
+- [x] Initial native string allocation ABI and large-concatenation regression
+- [ ] Complete array/struct runtime layout, ownership, and bounds checking
 
 ### Toolchain Direction
 Vel should remain primarily implemented in **C++23**, with assembly limited to target-specific code generation and runtime/ABI experiments. C is appropriate for tiny portable runtime shims when C++ introduces unnecessary ABI or dependency cost. C# should be used only for optional Windows tooling or GUI utilities, not for the compiler core, because it would add a separate managed runtime and split the cross-platform compiler architecture. The near-term priority is language/runtime correctness, not rewriting the compiler in another language.

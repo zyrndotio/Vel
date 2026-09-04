@@ -33,6 +33,36 @@ if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
     expected=$'3\nAB\nAB'
     [[ "$output" == "$expected" ]]
     rm -f "$ROOT/tests/aggregates_complex"
+
+    # Exercise the runtime allocator beyond the former 64 KiB concat buffer.
+    long_file="$(mktemp /tmp/vel-long-XXXXXX.vel)"
+    long_output="${long_file%.vel}"
+    long_text="$(head -c 70000 /dev/zero | tr '\0' 'A')"
+    printf 'let long: str = "%s" + "B";\nprint long;\n' "$long_text" >"$long_file"
+    "$VEL" build "$long_file" >/dev/null
+    "$long_output" >"${long_output}.out"
+    [[ "$(wc -c <"${long_output}.out")" -eq 70002 ]]
+    rm -f "$long_file" "$long_output" "${long_output}.out"
+
+    bounds_file="$(mktemp /tmp/vel-bounds-XXXXXX.vel)"
+    bounds_output="${bounds_file%.vel}"
+    printf 'let values: [int] = [1, 2];\nprint values[2];\n' >"$bounds_file"
+    "$VEL" build "$bounds_file" >/dev/null
+    if "$bounds_output" >/dev/null 2>&1; then
+        echo "Expected upper-bound access to fail" >&2
+        exit 1
+    fi
+    rm -f "$bounds_file" "$bounds_output"
+
+    negative_file="$(mktemp /tmp/vel-negative-XXXXXX.vel)"
+    negative_output="${negative_file%.vel}"
+    printf 'let values: [int] = [1, 2];\nprint values[-1];\n' >"$negative_file"
+    "$VEL" build "$negative_file" >/dev/null
+    if "$negative_output" >/dev/null 2>&1; then
+        echo "Expected negative index access to fail" >&2
+        exit 1
+    fi
+    rm -f "$negative_file" "$negative_output"
 fi
 
 echo "Vel aggregate and string type-checker tests passed."

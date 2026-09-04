@@ -8,6 +8,7 @@
 
 > Readable like English. Fast like C. Built for the real world.
 
+[![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
 [![Compiler Version](https://img.shields.io/badge/version-0.1.0-orange.svg)]()
 
@@ -24,6 +25,10 @@ Vel is a systems programming language that prioritizes:
 - **Safety** — Immutable by default, explicit mutation, strong typing
 
 Perfect for applications that need to be fast, maintainable, and reliable.
+
+> **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux and macOS; Windows native output is planned.
+
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [CLI reference](docs/CLI_REFERENCE.md), and [testing guide](docs/TESTING.md) for details.
 
 ---
 
@@ -214,6 +219,7 @@ Vel/
 ├── tests/              # Cross-platform smoke tests
 ├── .github/workflows/  # Linux/macOS/Windows CI
 ├── LICENSE            # GPL-3.0
+├── SECURITY.md        # Security reporting policy
 
 ```
 

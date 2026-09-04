@@ -1,8 +1,19 @@
+#ifndef VEL_APP_VERSION
+  #define VEL_APP_VERSION "0.3.1"
+#endif
+
 [Setup]
 AppName=Vel Programming Language
 AppId={{A9E8D7C6-B5A4-4321-9F8E-7D6C5B4A3F2E}
-AppVersion=0.3.1
+AppVersion={#VEL_APP_VERSION}
 AppPublisher=Zyrndotio
+AppPublisherURL=https://github.com/zyrndotio/Vel
+AppSupportURL=https://github.com/zyrndotio/Vel/issues
+AppUpdatesURL=https://github.com/zyrndotio/Vel/releases
+VersionInfoCompany=Zyrndotio
+VersionInfoDescription=Vel Programming Language compiler and application foundations
+VersionInfoProductName=Vel Programming Language
+VersionInfoCopyright=Copyright (C) 2026 Zyrndotio
 DefaultDirName={localappdata}\Programs\Vel
 DefaultGroupName=Vel
 PrivilegesRequired=lowest
@@ -23,6 +34,8 @@ ChangesEnvironment=yes
 [Files]
 ; Grab your freshly built binary from your MSBuild Release tree
 Source: "build\Release\vel.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
+Source: "build\Release\vel_std.lib"; DestDir: "{app}\lib"; Flags: ignoreversion
+Source: "runtime\vel_std.h"; DestDir: "{app}\include\vel"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion

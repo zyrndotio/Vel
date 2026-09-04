@@ -28,7 +28,7 @@ Perfect for applications that need to be fast, maintainable, and reliable.
 
 > **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain. Vel can build native console/application-core programs today, but a stable first-party windowing and event API is still on the roadmap.
 
-See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), and [runtime ABI](docs/RUNTIME_ABI.md) for details.
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [desktop example](examples/desktop-app/README.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), [runtime ABI](docs/RUNTIME_ABI.md), and [Windows trust guidance](docs/WINDOWS_TRUST.md) for details.
 
 The next application-platform milestone is documented in the [v0.3.2 design](docs/V0.3.2_DESIGN.md).
 

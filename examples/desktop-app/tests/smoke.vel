@@ -1,0 +1,6 @@
+// Source-level smoke fixture for the desktop application example.
+fn startup_message() {
+    print "desktop example source is valid";
+}
+
+startup_message();

@@ -1,0 +1,11 @@
+// Desktop application foundation example.
+// Vel 0.3.1 can build the native application core today.
+// Windowing, events, graphics, and resource loading are future APIs.
+
+fn main() {
+    print "Vel Desktop Application Example";
+    print "Application core started";
+    print "GUI backend: planned for a future release";
+}
+
+main();

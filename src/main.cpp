@@ -15,6 +15,10 @@
 #include "tokenizer.hpp"
 #include "type_checker.hpp"
 
+#ifndef VEL_VERSION_STRING
+#define VEL_VERSION_STRING "0.3.1"
+#endif
+
 namespace fs = std::filesystem;
 
 static std::string read_file(const std::string& path)
@@ -305,7 +309,7 @@ static int update_release(bool download)
         return EXIT_FAILURE;
     }
     std::cout << "Latest release: " << tag << "\n";
-    if (tag == "v0.3.1" && !download) {
+    if (tag == std::string("v") + VEL_VERSION_STRING && !download) {
         std::cout << "[Vel] Already up to date.\n";
         return EXIT_SUCCESS;
     }
@@ -354,7 +358,7 @@ static bool create_project(const fs::path& root)
     }
     fs::create_directories(root / "src");
     fs::create_directories(root / "tests");
-    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.3.1\"\nentry = \"src/main.vel\"\ntest = \"tests\"\n";
+    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"" << VEL_VERSION_STRING << "\"\nentry = \"src/main.vel\"\ntest = \"tests\"\n";
     std::ofstream(root / "src/main.vel") << "fn main() {\n    print \"Hello from Vel\";\n}\n\nmain();\n";
     std::ofstream(root / "README.md") << "# " << root.filename().string() << "\n\nA Vel project.\n\nRun with `vel run src/main.vel`.\n";
     std::cout << "[Vel] Created project: " << root << "\n";
@@ -434,7 +438,7 @@ int main(int argc, char* argv[])
     }
 
     if (cmd == "version") {
-        std::cout << "Vel 0.3.1\n";
+        std::cout << "Vel " << VEL_VERSION_STRING << "\n";
         std::cout << "Frontend: portable C++23\n";
         std::cout << "Native backends: Linux x86-64, macOS x86-64, Windows x86-64\n";
         std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";

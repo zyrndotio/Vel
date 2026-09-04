@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased] — v0.3.2 development
+
+### Added
+- Added manifest-aware project resolution for `vel check`, `vel test`, `vel build`, `vel run`, and `vel clean`.
+- Added the `vel_std` cross-platform C ABI host shim for environment lookup, current-directory discovery, file existence/read/write, process execution, and owned text buffers.
+- Added runtime smoke coverage for the host shim and expanded the CTest suite to eight passing tests.
+- Added the `examples/desktop-app` application-core project with Vel source, tests, assets, and Linux/macOS and Windows build scripts.
+- Added v0.3.2 standard-library, runtime ABI, and Windows trust design documentation.
+
+### Changed
+- Release packages now include the host shim library, public header, templates, and desktop example.
+- CMake, CPack, and the tagged GitHub Actions workflow derive package/compiler version metadata from the release tag.
+- Windows installer publisher metadata now identifies Zyrndotio and links to the official repository, support, and release pages.
+
+### Security
+- Documented that publisher metadata alone cannot remove SmartScreen warnings; trusted distribution requires Authenticode signing with a protected maintainer certificate and timestamp.
+
 ## [0.3.1] - 2026-09-04
 
 ### Added

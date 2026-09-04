@@ -189,13 +189,15 @@ The language is ready today for native command-line tools, application cores, da
 **Focus**: Make Vel useful for real native application foundations while defining a safe path toward desktop APIs.
 
 - [ ] Versioned runtime ABI for strings, arrays, structs, ownership, and allocation failure
-- [ ] Standard-library boundary for arguments, environment, paths, files, processes, and time
+- [x] Cross-platform host-shim foundation for environment, files, and processes
+- [ ] Vel-level standard-library modules for arguments, environment, paths, files, processes, and time
 - [ ] Stable project manifest semantics and project-root discovery
 - [ ] Structured diagnostics with source locations and stable error categories
 - [ ] Multi-file/import design and implementation
 - [ ] ABI conformance and runtime behavior fixtures across supported targets
 - [ ] Desktop window/event/resource interface design with an optional backend experiment
-- [ ] Release archives that include implemented runtime/library support rather than placeholder bulk
+- [x] Desktop application-core example with source, tests, assets, and host build scripts
+- [x] Release package wiring for the implemented host shim and application templates
 
 The detailed design is in [docs/V0.3.2_DESIGN.md](docs/V0.3.2_DESIGN.md). v0.3.2 does not claim a complete widget toolkit, graphics engine, ARM64 backend, package registry, or production-ready GUI application bundle.
 

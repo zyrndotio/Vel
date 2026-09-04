@@ -2,7 +2,7 @@
 
 Vel is split into two layers. The **portable frontend** includes the C++23 compiler executable, tokenizer, parser, syntax checker, token dump, and NASM assembly emission. The frontend is built and smoke-tested on Linux, macOS, and Windows.
 
-The **native backend** currently emits x86-64 Linux NASM and links with Linux GNU binutils. Consequently, `vel build` and the shorthand `vel program.vel` require Linux x86-64, NASM, and `ld`. On macOS and Windows, use `vel check`, `vel tokens`, or `vel asm` until PE/COFF and Mach-O backends are implemented.
+The code generator now emits x86-64 Linux ELF/NASM and macOS x86-64 Mach-O/NASM assembly. Linux x86-64 can assemble and link locally; macOS x86-64 can assemble and link with NASM and Apple `ld`. Windows remains frontend-only until a PE/COFF backend is added.
 
 | Capability | Linux x86-64 | macOS | Windows |
 |---|---:|---:|---:|
@@ -11,8 +11,8 @@ The **native backend** currently emits x86-64 Linux NASM and links with Linux GN
 | `vel check` | Supported | Supported | Supported |
 | `vel tokens` | Supported | Supported | Supported |
 | `vel asm` | Supported | Supported | Supported |
-| `vel build` | Supported | Planned | Planned |
-| Run generated Vel binaries | Supported | Planned | Planned |
+| `vel build` | Supported | Supported on x86-64 | Planned |
+| Run generated Vel binaries | Supported | Supported on x86-64 | Planned |
 
 ## Build from source
 
@@ -43,4 +43,4 @@ ISCC.exe vel_installer.iss
 
 ## Native backend roadmap
 
-The next backend milestone is to introduce a target abstraction in code generation, then add platform-specific startup, output, object-file, and linker implementations for macOS Mach-O and Windows PE/COFF. Until those backends land, the portable frontend is the supported way to use Vel on non-Linux hosts.
+The target abstraction and macOS Mach-O emission path are now in place. The next backend milestone is Windows PE/COFF support, followed by ARM64 targets. The macOS path currently targets x86-64 and uses Darwin syscall numbers for the built-in output routines.

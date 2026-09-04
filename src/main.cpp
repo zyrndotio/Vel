@@ -32,19 +32,39 @@ static void usage()
     std::cerr << "  vel <file.vel>            compile and run (Linux x86-64)\n";
     std::cerr << "  vel build <file.vel>      compile to native binary (Linux x86-64)\n";
     std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
-    std::cerr << "  vel asm   <file.vel>      emit NASM assembly\n";
+    std::cerr << "  vel asm   <file.vel> [target] emit target assembly\n";
+    std::cerr << "                             targets: linux-x86_64, macos-x86_64\n";
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
     std::cerr << "  vel version               print version\n";
     std::cerr << "  vel help                  show this help\n";
 }
 
-static bool native_backend_available()
+static CodeGenTarget host_target()
+{
+#if defined(__APPLE__) && defined(__x86_64__)
+    return CodeGenTarget::MacOSX86_64;
+#else
+    return CodeGenTarget::LinuxX86_64;
+#endif
+}
+
+static bool native_backend_available(CodeGenTarget target)
 {
 #if defined(__linux__) && defined(__x86_64__)
-    return true;
+    return target == CodeGenTarget::LinuxX86_64;
+#elif defined(__APPLE__) && defined(__x86_64__)
+    return target == CodeGenTarget::MacOSX86_64;
 #else
+    (void)target;
     return false;
 #endif
+}
+
+static std::optional<CodeGenTarget> parse_target(const std::string& name)
+{
+    if (name == "linux-x86_64") return CodeGenTarget::LinuxX86_64;
+    if (name == "macos-x86_64") return CodeGenTarget::MacOSX86_64;
+    return {};
 }
 
 static std::vector<Token> run_tokenizer(const std::string& src)
@@ -59,9 +79,9 @@ static Program run_parser(std::vector<Token> tokens, Arena& arena)
     return p.parse();
 }
 
-static std::string run_codegen(Program prog)
+static std::string run_codegen(Program prog, CodeGenTarget target = host_target())
 {
-    CodeGen gen(std::move(prog));
+    CodeGen gen(std::move(prog), target);
     return gen.generate();
 }
 
@@ -86,9 +106,10 @@ static std::string shell_quote(const std::string& value)
 
 static std::string compile(const std::string& vel_path, bool verbose = false)
 {
-    if (!native_backend_available()) {
-        std::cerr << "[Vel] Native compilation is currently available only on Linux x86-64.\n"
-                  << "[Vel] Use 'vel check' or 'vel asm' on this host.\n";
+    CodeGenTarget target = host_target();
+    if (!native_backend_available(target)) {
+        std::cerr << "[Vel] No native backend is available for this host.\n"
+                  << "[Vel] Use 'vel check' or 'vel asm' instead.\n";
         exit(EXIT_FAILURE);
     }
 
@@ -104,6 +125,7 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     fs::path obj_path = out_dir / (stem + ".o");
     fs::path bin_path = out_dir / stem;
     std::string asm_out = asm_path.string();
+    const char* object_format = target == CodeGenTarget::MacOSX86_64 ? "macho64" : "elf64";
     std::string obj_out = obj_path.string();
     std::string bin_out = bin_path.string();
 
@@ -118,7 +140,7 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     auto prog = run_parser(std::move(tokens), arena);
 
     if (verbose) std::cerr << "[Vel] Generating assembly...\n";
-    std::string asm_code = run_codegen(std::move(prog));
+    std::string asm_code = run_codegen(std::move(prog), target);
 
     {
         std::ofstream f(asm_out);
@@ -126,14 +148,16 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     }
 
     if (verbose) std::cerr << "[Vel] Assembling with NASM...\n";
-    std::string nasm_cmd = "nasm -f elf64 " + shell_quote(asm_out) + " -o " + shell_quote(obj_out);
+    std::string nasm_cmd = "nasm -f " + std::string(object_format) + " " + shell_quote(asm_out) + " -o " + shell_quote(obj_out);
     if (system(nasm_cmd.c_str()) != 0) {
         std::cerr << "[Vel] Assembly failed\n";
         exit(EXIT_FAILURE);
     }
 
     if (verbose) std::cerr << "[Vel] Linking...\n";
-    std::string ld_cmd = "ld -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
+    std::string ld_cmd = target == CodeGenTarget::MacOSX86_64
+        ? "ld -arch x86_64 -macosx_version_min 10.15 -e _start -o " + shell_quote(bin_out) + " " + shell_quote(obj_out)
+        : "ld -o " + shell_quote(bin_out) + " " + shell_quote(obj_out);
     if (system(ld_cmd.c_str()) != 0) {
         std::cerr << "[Vel] Linking failed\n";
         exit(EXIT_FAILURE);
@@ -162,7 +186,8 @@ int main(int argc, char* argv[])
     if (cmd == "version") {
         std::cout << "Vel 0.1.0\n";
         std::cout << "Frontend: portable C++23\n";
-        std::cout << "Native backend: x86-64 Linux" << (native_backend_available() ? " (available)" : " (unavailable on this host)") << "\n";
+        std::cout << "Native backends: Linux x86-64, macOS x86-64\n";
+        std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";
         return EXIT_SUCCESS;
     }
 
@@ -191,7 +216,16 @@ int main(int argc, char* argv[])
         auto src  = read_file(argv[2]);
         auto toks = run_tokenizer(src);
         auto prog = run_parser(std::move(toks), arena);
-        auto asm_ = run_codegen(std::move(prog));
+        CodeGenTarget target = host_target();
+        if (argc >= 4) {
+            auto parsed = parse_target(argv[3]);
+            if (!parsed) {
+                std::cerr << "[Vel] Unknown target: " << argv[3] << "\n";
+                return EXIT_FAILURE;
+            }
+            target = *parsed;
+        }
+        auto asm_ = run_codegen(std::move(prog), target);
         std::cout << asm_;
         return EXIT_SUCCESS;
     }

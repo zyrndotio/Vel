@@ -1,0 +1,11 @@
+fn weighted(a: int, b: int, c: int) -> int {
+    return a * 100 + b * 10 + c;
+}
+
+fn announce(value: int) {
+    print value;
+}
+
+let result = weighted(4, 2, 7);
+print result;
+announce(result);

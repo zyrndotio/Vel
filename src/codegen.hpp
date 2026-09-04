@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -9,10 +10,13 @@
 
 #include "ast.hpp"
 
+enum class CodeGenTarget { LinuxX86_64, MacOSX86_64 };
+
 class CodeGen {
 public:
-    explicit CodeGen(Program prog)
+    explicit CodeGen(Program prog, CodeGenTarget target = CodeGenTarget::LinuxX86_64)
         : m_prog(std::move(prog))
+        , m_target(target)
     {
     }
 
@@ -20,7 +24,7 @@ public:
     {
         // We collect string literals during generation, emit them at the end.
 
-        emit_line("section .text");
+        emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "section __TEXT,__text" : "section .text");
         emit_line("global _start");
 
         emit_builtins();
@@ -29,14 +33,16 @@ public:
         std::vector<Stmt*> fns;
         std::vector<Stmt*> top;
         for (auto* s : m_prog.stmts) {
-            if (std::holds_alternative<StmtFn*>(s->var))
+            if (std::holds_alternative<StmtFn*>(s->var)) {
+                auto* fn = std::get<StmtFn*>(s->var);
+                m_functions[fn->name.value.value_or("")] = {fn->params.size(), fn->return_type};
                 fns.push_back(s);
-            else
+            } else {
                 top.push_back(s);
+            }
         }
 
         for (auto* s : fns) gen_fn(std::get<StmtFn*>(s->var));
-
         emit_line("");
         emit_line("_start:");
         push_scope();
@@ -44,7 +50,7 @@ public:
         for (auto* s : top) gen_stmt(s);
 
         emit_line("    ; implicit exit");
-        emit_line("    mov rax, 60");
+        emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "    mov rax, 0x2000001" : "    mov rax, 60");
         emit_line("    xor rdi, rdi");
         emit_line("    syscall");
 
@@ -52,7 +58,7 @@ public:
 
         if (!m_data.str().empty()) {
             emit_line("");
-            emit_line("section .data");
+            emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "section __DATA,__data" : "section .data");
             m_out << m_data.str();
         }
 
@@ -182,7 +188,7 @@ private:
     void emit_builtins()
     {
         // print_int: prints integer in rax to stdout
-        emit_line(R"(
+        std::string builtins = R"(
 ; ── vel_print_int ───────────────────────────────────────────────────────────
 ; Input: rax = signed 64-bit integer
 ; Clobbers: rax, rbx, rcx, rdx, rsi, rdi, r8
@@ -256,7 +262,15 @@ vel_print_newline:
     mov rdx, 1
     syscall
     ret
-)");
+        )";
+        if (m_target == CodeGenTarget::MacOSX86_64) {
+            size_t pos = 0;
+            while ((pos = builtins.find("mov rax, 1", pos)) != std::string::npos) {
+                builtins.replace(pos, 10, "mov rax, 0x2000004");
+                pos += 18;
+            }
+        }
+        emit_line(builtins);
 
         // Reserve space in data section for built-in strings
         m_data << "vel_newline db 10\n";
@@ -410,15 +424,32 @@ vel_print_newline:
         stack_push("rax");
     }
 
+    struct FunctionInfo {
+        size_t  arity;
+        VelType return_type;
+    };
+
     void gen_expr_node(ExprCall* n)
     {
+        auto name = n->name.value.value_or("");
+        auto it = m_functions.find(name);
+        if (it == m_functions.end()) {
+            std::cerr << "[Vel] Undefined function: " << name << "\n";
+            exit(EXIT_FAILURE);
+        }
+        if (n->args.size() != it->second.arity) {
+            std::cerr << "[Vel] Function '" << name << "' expects " << it->second.arity
+                      << " argument(s), got " << n->args.size() << "\n";
+            exit(EXIT_FAILURE);
+        }
+
         // Push args left-to-right; callee accesses via [rbp+16], [rbp+24], ...
         // where [rbp+16] = last pushed = first arg (stack grows down)
         // So we push in reverse to get first arg at [rbp+16]
         for (int i = (int)n->args.size() - 1; i >= 0; i--) {
             gen_expr(n->args[i]);
         }
-        emit_line("    call vel_fn_" + n->name.value.value_or(""));
+        emit_line("    call vel_fn_" + name);
         // Caller cleans up args
         if (!n->args.empty()) {
             emit_line("    add rsp, " + std::to_string(n->args.size() * 8));
@@ -474,6 +505,20 @@ vel_print_newline:
 
     void gen_stmt_node(StmtReturn* n)
     {
+        if (!m_current_return_type) {
+            std::cerr << "[Vel] return used outside of a function\n";
+            exit(EXIT_FAILURE);
+        }
+        if (*m_current_return_type == VelType::Void && n->value) {
+            std::cerr << "[Vel] void function cannot return a value\n";
+            exit(EXIT_FAILURE);
+        }
+        if (*m_current_return_type != VelType::Void && !n->value) {
+            std::cerr << "[Vel] function must return a value of type "
+                      << veltype_str(*m_current_return_type) << "\n";
+            exit(EXIT_FAILURE);
+        }
+        m_current_fn_has_return = true;
         if (n->value) {
             gen_expr(*n->value);
             stack_pop("rax");
@@ -621,6 +666,11 @@ vel_print_newline:
 
         // Map param names to rbp-relative addresses
         // Args are pushed right-to-left by caller, so first param is at [rbp+16]
+        auto previous_return_type = m_current_return_type;
+        bool previous_has_return = m_current_fn_has_return;
+        m_current_return_type = n->return_type;
+        m_current_fn_has_return = false;
+
         m_fn_params.clear();
         for (size_t i = 0; i < n->params.size(); i++) {
             std::string addr = "QWORD [rbp + " + std::to_string(16 + i * 8) + "]";
@@ -636,8 +686,15 @@ vel_print_newline:
         pop_scope();
         m_stack_size = saved_stack;
         m_fn_params.clear();
+        if (n->return_type != VelType::Void && !m_current_fn_has_return) {
+            std::cerr << "[Vel] function '" << n->name.value.value_or("")
+                      << "' must return a value of type " << veltype_str(n->return_type) << "\n";
+            exit(EXIT_FAILURE);
+        }
+        m_current_return_type = previous_return_type;
+        m_current_fn_has_return = previous_has_return;
 
-        // Default return if no explicit return
+        // Default return for void functions.
         emit_line("    xor rax, rax");
         emit_line("    leave");
         emit_line("    ret");
@@ -657,6 +714,7 @@ vel_print_newline:
 
 
     Program           m_prog;
+    CodeGenTarget     m_target;
     std::stringstream m_out;
     struct LoopLabels {
         std::string continue_label;
@@ -666,4 +724,7 @@ vel_print_newline:
 
     std::vector<LoopLabels> m_loops;
     std::unordered_map<std::string, std::string> m_fn_params;
+    std::unordered_map<std::string, FunctionInfo> m_functions;
+    std::optional<VelType> m_current_return_type;
+    bool m_current_fn_has_return {false};
 };

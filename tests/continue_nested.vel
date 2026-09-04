@@ -1,0 +1,17 @@
+mut outer = 0;
+mut hits = 0;
+while (outer < 3) {
+    outer = outer + 1;
+    mut inner = 0;
+    while (inner < 4) {
+        inner = inner + 1;
+        if (inner == 2) {
+            continue;
+        }
+        if (outer == 2 && inner == 3) {
+            break;
+        }
+        hits = hits + 1;
+    }
+}
+print hits;

@@ -407,7 +407,7 @@ fn greet(name: str) {
 }
 ```
 
-Types required for all parameters.
+Types are required for all parameters. Calls must provide exactly the declared number of arguments. The compiler validates function names and argument counts during code generation; type inference and full argument-type diagnostics remain planned.
 
 ### Return Type
 
@@ -422,7 +422,7 @@ fn greet() {
 }
 ```
 
-Use `->` to specify return type.
+Use `->` to specify a return type. A non-void function must contain a value-returning statement, while a void function may only use `return;` or an implicit return.
 
 ### Return Values
 
@@ -445,7 +445,7 @@ fn greet(name: str) {
 greet("World");  // Call with argument
 ```
 
-Arguments must match parameter types.
+Arguments must match the declared arity. Integer, boolean, and string values are currently represented through the backend’s register conventions; complete static argument-type checking is planned alongside broader type inference.
 
 ### Variable Scope in Functions
 

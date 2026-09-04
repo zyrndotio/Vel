@@ -136,7 +136,7 @@ cd Vel
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 ```
 
-**Note**: Native binary compilation on macOS generates Linux binaries. macOS target support is planned for v1.0.0.
+**Note**: The compiler can emit macOS x86-64 Mach-O assembly with `./vel asm examples/hello.vel macos-x86_64`. Native macOS linking requires an x86-64 macOS host with NASM and Apple `ld`; ARM64 native output is not supported yet.
 
 ---
 
@@ -151,8 +151,11 @@ After building, verify everything works:
 # Test 2: Tokenize a program
 ./vel tokens examples/hello.vel
 
-# Test 3: Generate assembly
+# Test 3: Generate host assembly
 ./vel asm examples/hello.vel
+
+# Optional: Generate macOS x86-64 Mach-O assembly
+./vel asm examples/hello.vel macos-x86_64
 
 # Test 4: Validate without native tools (all desktop OSes)
 ./vel check examples/hello.vel

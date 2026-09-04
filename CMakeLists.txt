@@ -14,6 +14,8 @@ include(CTest)
 if(BUILD_TESTING AND UNIX)
     add_test(NAME vel_frontend_smoke
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/smoke.sh $<TARGET_FILE:vel>)
+    add_test(NAME vel_continue_and_targets
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/continue_tests.sh $<TARGET_FILE:vel>)
 endif()
 
 # Compiler warnings

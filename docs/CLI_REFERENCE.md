@@ -69,13 +69,15 @@ vel build examples/hello.vel
 
 **On Windows/macOS:**
 
-The command exits with a clear unsupported-backend message. Use `vel check`, `vel tokens`, or `vel asm` on those hosts until native PE/COFF and Mach-O backends are available.
+Windows remains frontend-only until a PE/COFF backend is available. macOS x86-64 can use the Mach-O backend; macOS ARM64 should select `vel asm ... macos-x86_64` for assembly output and cannot currently link a native ARM64 binary.
 
-### `asm` — Generate Assembly Only
+### `asm` — Generate Target Assembly
 
 ```
-vel asm <file.vel>
+vel asm <file.vel> [target]
 ```
+
+Generates assembly to standard output. The optional target is `linux-x86_64` or `macos-x86_64`; when omitted, the host default is selected.
 
 Generates assembly and writes it to standard output without running linking steps.
 
@@ -86,7 +88,9 @@ vel asm examples/counter.vel > counter.asm  # Save the assembly
 ```
 
 **Output:**
-- Prints x86-64 NASM syntax to standard output
+- Prints x86-64 NASM syntax to standard output.
+- `linux-x86_64` emits ELF/Linux sections and syscalls.
+- `macos-x86_64` emits Mach-O/Darwin sections and syscalls.
 
 ### `tokens` — Debug Token Stream
 
@@ -129,8 +133,9 @@ vel version
 
 **Output:**
 ```
-Vel 0.1.0 — Early Build
-Target: x86-64 Linux (Windows/macOS cross-compile coming)
+Vel 0.1.0
+Frontend: portable C++23
+Native backends: Linux x86-64, macOS x86-64
 ```
 
 ---

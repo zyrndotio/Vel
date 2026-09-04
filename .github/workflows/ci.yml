@@ -58,5 +58,5 @@ jobs:
         shell: bash
         run: |
           ./build/vel build examples/hello.vel
-          ./examples/hello | grep -Fx 'Hello from Vel!'
+          ./examples/hello | grep -Fx 'Hello, World!'
           rm -f examples/hello

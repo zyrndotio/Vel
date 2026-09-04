@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.1.0 (Early Build)
+**Current Version**: 0.1.1 (Early Build)
 **Target Version**: 1.0.0 (Full Release)
 
 ---
@@ -20,7 +20,7 @@ This document outlines the planned features and improvements for the Vel program
 
 ---
 
-## v0.1.0 — Early Build ✅
+## v0.1.1 — Early Build ✅
 
 **Status**: Released
 **Date**: September 2026
@@ -32,8 +32,8 @@ This document outlines the planned features and improvements for the Vel program
 - [x] x86-64 assembly code generation
 - [x] Basic type system (int, float, str, bool)
 - [x] Variables (let/mut)
-- [x] Functions with parameters and returns
-- [x] Control flow (if/elif/else, while, loop, break)
+- [x] Functions with typed parameters and declared returns, including parser/type-checker validation
+- [x] Control flow (if/elif/else, while, loop, break, continue) with nested-loop regression coverage
 - [x] Arithmetic and comparison operators
 - [x] Print built-in function
 - [x] CLI with multiple commands
@@ -42,7 +42,7 @@ This document outlines the planned features and improvements for the Vel program
 - No string concatenation
 - No arrays or collections
 - Limited error messages
-- Linux assembly target only
+- x86-64 Linux and macOS assembly targets only; Windows PE/COFF remains planned
 - Single file programs only
 
 ---
@@ -291,7 +291,7 @@ enum Result<T, E> {
 
 ### Multi-Target Support
 - [ ] Windows (PE/COFF) backend
-- [ ] Target abstraction layer
+- [x] Target abstraction layer (Linux ELF and macOS Mach-O)
 - [ ] Cross-compilation support
 
 ---
@@ -314,7 +314,7 @@ enum Result<T, E> {
 #### 2. Multi-Platform Support
 - [x] Linux x86-64 (v0.1.0)
 - [ ] Windows x86-64 (PE/COFF)
-- [ ] macOS x86-64 (Mach-O)
+- [x] macOS x86-64 (Mach-O)
 - [ ] macOS ARM64 (Apple Silicon)
 - [ ] Linux ARM64
 
@@ -429,10 +429,16 @@ enum Result<T, E> {
 
 ---
 
+## Near-Term Engineering Priorities
+
+The next practical milestone is to finish the type-system and release foundations before adding large language features. Priority work includes path-aware diagnostics with error codes and source snippets, complete static type inference for local variables, string escape sequences and concatenation, a small intermediate representation, multi-file symbol resolution, and a Windows PE/COFF backend. Arrays and modules should follow once these foundations are stable.
+
 ## Revision History
 
 | Date | Change |
 |------|--------|
+| 2026-09-04 | Added parser/type-checker contracts, nested-loop tests, Linux/macOS target abstraction, packaging, CI, and release-readiness work |
+| 2026-09-04 | Released 0.1.1 with parser/type checking, macOS Mach-O output, expanded tests, packaging, and repository tooling |
 | 2026-09-03 | Initial roadmap created |
 
 ---
@@ -445,5 +451,5 @@ enum Result<T, E> {
 
 ---
 
-*Last Updated: 2026-09-03*
+*Last Updated: 2026-09-04*
 *Roadmap is subject to change based on community feedback and project priorities.*

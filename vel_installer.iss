@@ -1,7 +1,7 @@
 [Setup]
 AppName=Vel Programming Language
 AppId={{A9E8D7C6-B5A4-4321-9F8E-7D6C5B4A3F2E}
-AppVersion=0.1.0
+AppVersion=0.1.1
 AppPublisher=Zyrndotio
 DefaultDirName={localappdata}\Programs\Vel
 DefaultGroupName=Vel

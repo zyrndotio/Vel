@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.1.0-orange.svg)]()
+[![Compiler Version](https://img.shields.io/badge/version-0.1.1-orange.svg)]()
 
 </div>
 

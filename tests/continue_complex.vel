@@ -1,0 +1,27 @@
+mut outer = 0;
+mut total = 0;
+
+while (outer < 3) {
+    outer = outer + 1;
+    mut middle = 0;
+    while (middle < 3) {
+        middle = middle + 1;
+        if (middle == 1) {
+            continue;
+        }
+
+        mut inner = 0;
+        loop {
+            inner = inner + 1;
+            if (inner == 2) {
+                break;
+            }
+            if (outer == 3 && middle == 3) {
+                continue;
+            }
+            total = total + 1;
+        }
+    }
+}
+
+print total;

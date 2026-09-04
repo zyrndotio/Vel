@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(vel VERSION 0.1.0 LANGUAGES CXX)
+project(vel VERSION 0.1.1 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -16,6 +16,8 @@ if(BUILD_TESTING AND UNIX)
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/smoke.sh $<TARGET_FILE:vel>)
     add_test(NAME vel_continue_and_targets
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/continue_tests.sh $<TARGET_FILE:vel>)
+    add_test(NAME vel_type_checker
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/type_checker_tests.sh $<TARGET_FILE:vel>)
 endif()
 
 # Compiler warnings

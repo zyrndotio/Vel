@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.1.1] - 2026-09-04
+
+### Added
+- Added parser/type-checker validation for function argument count and types, return values, variable types, assignment mutability, conditions, and loop-control placement.
+- Added macOS x86-64 Mach-O assembly emission and target selection via `vel asm <file.vel> macos-x86_64`.
+- Added comprehensive nested-loop `continue` fixtures and negative type-checker tests.
+- Added repository release-readiness files, contributor templates, security guidance, Makefile helpers, and guarded CPack RPM generation.
+
+### Fixed
+- Corrected the Ubuntu CI hello-world assertion to match the checked-in example output.
+- Prevented failed tests from leaving generated binaries and temporary assembly files behind.
+
 ## [Unreleased]
 
 ### Added

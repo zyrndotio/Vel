@@ -3,10 +3,17 @@ set -euo pipefail
 
 VEL="${1:?usage: continue_tests.sh /path/to/vel}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cleanup() {
+    rm -f "$ROOT/tests/continue_nested" "$ROOT/tests/continue_complex" "$ROOT/tests/functions_contracts"
+    rm -f /tmp/vel-continue.asm /tmp/vel-continue-complex.asm /tmp/vel-functions.asm /tmp/vel-functions-macho.asm /tmp/vel-bad-arity.vel /tmp/vel-bad-arity.err
+}
+trap cleanup EXIT
 
 "$VEL" check "$ROOT/tests/continue_nested.vel" >/dev/null
+"$VEL" check "$ROOT/tests/continue_complex.vel" >/dev/null
 "$VEL" check "$ROOT/tests/functions_contracts.vel" >/dev/null
 "$VEL" asm "$ROOT/tests/continue_nested.vel" >/tmp/vel-continue.asm
+"$VEL" asm "$ROOT/tests/continue_complex.vel" >/tmp/vel-continue-complex.asm
 "$VEL" asm "$ROOT/tests/functions_contracts.vel" >/tmp/vel-functions.asm
 "$VEL" asm "$ROOT/tests/functions_contracts.vel" macos-x86_64 >/tmp/vel-functions-macho.asm
 grep -q 'section __TEXT,__text' /tmp/vel-functions-macho.asm
@@ -28,10 +35,9 @@ grep -q "expects 2 argument(s), got 1" /tmp/vel-bad-arity.err
 if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
     "$VEL" build "$ROOT/tests/continue_nested.vel" >/dev/null
     [[ "$("$ROOT/tests/continue_nested")" == "7" ]]
+    "$VEL" build "$ROOT/tests/continue_complex.vel" >/dev/null
+    [[ "$("$ROOT/tests/continue_complex")" == "5" ]]
     "$VEL" build "$ROOT/tests/functions_contracts.vel" >/dev/null
     [[ "$("$ROOT/tests/functions_contracts")" == $'427\n427' ]]
-    rm -f "$ROOT/tests/continue_nested" "$ROOT/tests/functions_contracts"
 fi
-
-rm -f /tmp/vel-continue.asm /tmp/vel-functions.asm /tmp/vel-functions-macho.asm /tmp/vel-bad-arity.vel /tmp/vel-bad-arity.err
 echo "Vel continue, function, and Mach-O assembly tests passed."

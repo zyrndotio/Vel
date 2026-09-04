@@ -10,6 +10,7 @@
 #include "codegen.hpp"
 #include "parser.hpp"
 #include "tokenizer.hpp"
+#include "type_checker.hpp"
 
 namespace fs = std::filesystem;
 
@@ -79,6 +80,12 @@ static Program run_parser(std::vector<Token> tokens, Arena& arena)
     return p.parse();
 }
 
+static void run_type_checker(const Program& prog)
+{
+    TypeChecker checker(prog);
+    checker.check();
+}
+
 static std::string run_codegen(Program prog, CodeGenTarget target = host_target())
 {
     CodeGen gen(std::move(prog), target);
@@ -139,6 +146,8 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     if (verbose) std::cerr << "[Vel] Parsing...\n";
     auto prog = run_parser(std::move(tokens), arena);
 
+    if (verbose) std::cerr << "[Vel] Type checking...\n";
+    run_type_checker(prog);
     if (verbose) std::cerr << "[Vel] Generating assembly...\n";
     std::string asm_code = run_codegen(std::move(prog), target);
 
@@ -184,7 +193,7 @@ int main(int argc, char* argv[])
     }
 
     if (cmd == "version") {
-        std::cout << "Vel 0.1.0\n";
+        std::cout << "Vel 0.1.1\n";
         std::cout << "Frontend: portable C++23\n";
         std::cout << "Native backends: Linux x86-64, macOS x86-64\n";
         std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";
@@ -206,7 +215,8 @@ int main(int argc, char* argv[])
     if (cmd == "check" && argc >= 3) {
         auto src = read_file(argv[2]);
         Arena arena(1024 * 1024 * 8);
-        run_parser(run_tokenizer(src), arena);
+        auto prog = run_parser(run_tokenizer(src), arena);
+        run_type_checker(prog);
         std::cout << "[Vel] OK: " << argv[2] << "\n";
         return EXIT_SUCCESS;
     }
@@ -216,6 +226,7 @@ int main(int argc, char* argv[])
         auto src  = read_file(argv[2]);
         auto toks = run_tokenizer(src);
         auto prog = run_parser(std::move(toks), arena);
+        run_type_checker(prog);
         CodeGenTarget target = host_target();
         if (argc >= 4) {
             auto parsed = parse_target(argv[3]);

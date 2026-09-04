@@ -9,8 +9,13 @@ trap 'rm -rf "$ROOT"' EXIT
 [[ -f "$ROOT/app/vel.toml" ]]
 [[ -f "$ROOT/app/src/main.vel" ]]
 "$VEL" check "$ROOT/app/src/main.vel" >/dev/null
-"$VEL" run "$ROOT/app/src/main.vel" >/tmp/vel-run.out 2>/tmp/vel-run.err
-grep -Fxq 'Hello from Vel' /tmp/vel-run.out
+if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+    "$VEL" run "$ROOT/app/src/main.vel" >/tmp/vel-run.out 2>/tmp/vel-run.err
+    grep -Fxq 'Hello from Vel' /tmp/vel-run.out
+else
+    "$VEL" asm "$ROOT/app/src/main.vel" >/tmp/vel-run.out
+    test -s /tmp/vel-run.out
+fi
 "$VEL" clean "$ROOT/app/src/main.vel" >/dev/null
 rm -f /tmp/vel-doctor.out /tmp/vel-run.out /tmp/vel-run.err
 echo "Vel CLI project command tests passed."

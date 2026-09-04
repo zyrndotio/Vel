@@ -28,13 +28,13 @@ jobs:
           cp README.md LICENSE dist/vel-linux-x86_64/
           cp -r docs assets examples dist/vel-linux-x86_64/
           tar -czf dist/vel-${GITHUB_REF_NAME}-linux-x86_64.tar.gz -C dist vel-linux-x86_64
-          cp build/Vel-*.deb dist/ || true
+          mkdir -p release_upload
+          cp dist/vel-*.tar.gz release_upload/
+          cp build/Vel-*.deb release_upload/ || true
       - uses: actions/upload-artifact@v4
         with:
           name: release-linux
-          path:
-            dist/*.tar.gz
-            dist/*.deb
+          path: release_upload
 
   macos:
     runs-on: macos-latest
@@ -52,10 +52,12 @@ jobs:
           cp README.md LICENSE dist/vel-macos-x86_64/
           cp -r docs assets examples dist/vel-macos-x86_64/
           tar -czf dist/vel-${GITHUB_REF_NAME}-macos-x86_64.tar.gz -C dist vel-macos-x86_64
+          mkdir -p release_upload
+          cp dist/vel-*.tar.gz release_upload/
       - uses: actions/upload-artifact@v4
         with:
           name: release-macos
-          path: dist/*.tar.gz
+          path: release_upload
 
   windows:
     runs-on: windows-latest
@@ -78,12 +80,13 @@ jobs:
           Copy-Item README.md,LICENSE dist\vel-windows-x86_64\
           Copy-Item -Recurse docs,assets,examples dist\vel-windows-x86_64\
           Compress-Archive -Path dist\vel-windows-x86_64 -DestinationPath dist\vel-${env:GITHUB_REF_NAME}-windows-x86_64.zip
+          New-Item -ItemType Directory -Force release_upload | Out-Null
+          Copy-Item dist\vel-*.zip release_upload\
+          Copy-Item installer_output\VelSetup-x64.exe release_upload\
       - uses: actions/upload-artifact@v4
         with:
           name: release-windows
-          path: |
-            dist/*.zip
-            installer_output/VelSetup-x64.exe
+          path: release_upload
 
   publish:
     needs: [linux, macos, windows]

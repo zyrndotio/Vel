@@ -1,0 +1,23 @@
+struct Inner {
+    value: int,
+    label: str,
+}
+
+struct Outer {
+    inner: Inner,
+    count: int,
+}
+
+let matrix: [[int]] = [[1, 2], [3, 4]];
+let empty: str = "";
+let first: str = empty + "A";
+let second: str = first + "B";
+let value: int = matrix[1][0];
+let nested: Outer = Outer {
+    inner: Inner { value: 3, label: "AB" },
+    count: 2,
+};
+
+print nested.inner.value;
+print nested.inner.label;
+print second;

@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install toolchain
+        run: sudo apt-get update && sudo apt-get install -y nasm binutils
+      - name: Build and test
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          cmake --build build --target package
+          mkdir -p dist/vel-linux-x86_64
+          cp build/vel dist/vel-linux-x86_64/
+          cp README.md LICENSE dist/vel-linux-x86_64/
+          cp -r docs assets examples dist/vel-linux-x86_64/
+          tar -czf dist/vel-${GITHUB_REF_NAME}-linux-x86_64.tar.gz -C dist vel-linux-x86_64
+          cp build/Vel-*.deb dist/ || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-linux
+          path:
+            dist/*.tar.gz
+            dist/*.deb
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --parallel 2
+          ctest --test-dir build --output-on-failure
+      - name: Package
+        run: |
+          mkdir -p dist/vel-macos-x86_64
+          cp build/vel dist/vel-macos-x86_64/
+          cp README.md LICENSE dist/vel-macos-x86_64/
+          cp -r docs assets examples dist/vel-macos-x86_64/
+          tar -czf dist/vel-${GITHUB_REF_NAME}-macos-x86_64.tar.gz -C dist vel-macos-x86_64
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: dist/*.tar.gz
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake -S . -B build
+          cmake --build build --config Release --parallel 2
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' vel_installer.iss
+      - name: Package portable archive
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist\vel-windows-x86_64 | Out-Null
+          Copy-Item build\Release\vel.exe dist\vel-windows-x86_64\
+          Copy-Item README.md,LICENSE dist\vel-windows-x86_64\
+          Copy-Item -Recurse docs,assets,examples dist\vel-windows-x86_64\
+          Compress-Archive -Path dist\vel-windows-x86_64 -DestinationPath dist\vel-${env:GITHUB_REF_NAME}-windows-x86_64.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows
+          path: |
+            dist/*.zip
+            installer_output/VelSetup-x64.exe
+
+  publish:
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Vel ${GITHUB_REF_NAME#v}" \
+            --generate-notes

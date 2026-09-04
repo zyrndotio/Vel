@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cassert>
 #include <iostream>
 #include <optional>
@@ -40,6 +41,7 @@ public:
             emit_line("global _start");
         }
 
+        collect_layouts();
         emit_builtins();
 
 
@@ -78,6 +80,11 @@ public:
             emit_line("");
             emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "section __DATA,__data" : "section .data");
             m_out << m_data.str();
+        }
+        if (!m_bss.str().empty()) {
+            emit_line("");
+            emit_line(m_target == CodeGenTarget::MacOSX86_64 ? "section __BSS,__bss" : "section .bss");
+            m_out << m_bss.str();
         }
 
         return m_out.str();
@@ -165,7 +172,30 @@ private:
 
 
     int m_str_count { 0 };
+    int m_aggregate_count { 0 };
     std::stringstream m_data;
+    std::stringstream m_bss;
+    std::unordered_map<std::string, std::vector<std::string>> m_struct_fields;
+    std::unordered_map<std::string, std::unordered_map<std::string, std::string>> m_struct_field_types;
+    std::unordered_map<std::string, std::string> m_struct_vars;
+    std::unordered_map<std::string, bool> m_string_vars;
+
+    void collect_layouts()
+    {
+        for (auto* stmt : m_prog.stmts) {
+            if (std::holds_alternative<StmtStruct*>(stmt->var)) {
+                auto* structure = std::get<StmtStruct*>(stmt->var);
+                std::vector<std::string> fields;
+                const auto structure_name = structure->name.value.value_or("");
+                for (const auto& field : structure->fields) {
+                    const auto field_name = field.name.value.value_or("");
+                    fields.push_back(field_name);
+                    m_struct_field_types[structure_name][field_name] = type_ref_str(field.type);
+                }
+                m_struct_fields[structure_name] = std::move(fields);
+            }
+        }
+    }
 
     // Emits a string into .data, returns (label, length)
     std::pair<std::string, size_t> intern_string(const std::string& val)
@@ -202,6 +232,150 @@ private:
         return {label, val.size()};
     }
 
+
+    std::string static_value(Expr* expr)
+    {
+        if (std::holds_alternative<ExprIntLit*>(expr->var)) return std::get<ExprIntLit*>(expr->var)->tok.value.value_or("0");
+        if (std::holds_alternative<ExprBoolLit*>(expr->var)) return std::get<ExprBoolLit*>(expr->var)->tok.value.value_or("false") == "true" ? "1" : "0";
+        if (std::holds_alternative<ExprStrLit*>(expr->var)) return intern_string(std::get<ExprStrLit*>(expr->var)->tok.value.value_or("")).first;
+        if (std::holds_alternative<ExprArray*>(expr->var)) {
+            auto label = "vel_arr_" + std::to_string(m_aggregate_count++);
+            auto& elements = std::get<ExprArray*>(expr->var)->elements;
+            std::vector<std::string> values;
+            for (auto* element : elements) values.push_back(static_value(element));
+            m_data << label << " dq ";
+            for (size_t i = 0; i < values.size(); ++i) {
+                if (i) m_data << ",";
+                m_data << values[i];
+            }
+            m_data << "\n";
+            return label;
+        }
+        if (std::holds_alternative<ExprStructInit*>(expr->var)) {
+            auto* init = std::get<ExprStructInit*>(expr->var);
+            auto label = "vel_struct_" + std::to_string(m_aggregate_count++);
+            std::unordered_map<std::string, Expr*> values;
+            for (const auto& [field, value] : init->fields) values[field.value.value_or("")] = value;
+            const auto& fields = m_struct_fields[init->name.value.value_or("")];
+            std::vector<std::string> field_values;
+            for (const auto& field : fields) field_values.push_back(static_value(values.at(field)));
+            m_data << label << " dq ";
+            for (size_t i = 0; i < field_values.size(); ++i) {
+                if (i) m_data << ",";
+                m_data << field_values[i];
+            }
+            m_data << "\n";
+            return label;
+        }
+        return "0";
+    }
+
+    void emit_runtime_helpers()
+    {
+        if (m_target == CodeGenTarget::WindowsX86_64) {
+            emit_line(R"(
+vel_print_cstr:
+    mov rdi, rsi
+    xor rdx, rdx
+.count:
+    cmp byte [rdi + rdx], 0
+    je .write
+    inc rdx
+    jmp .count
+.write:
+    mov rsi, rdi
+    jmp vel_print_str
+vel_concat:
+    push r12
+    mov r8, rdi
+    mov r9, rsi
+    xor r10, r10
+.len1:
+    cmp byte [r8 + r10], 0
+    je .len2_start
+    inc r10
+    jmp .len1
+.len2_start:
+    xor r11, r11
+.len2:
+    cmp byte [r9 + r11], 0
+    je .copy
+    inc r11
+    jmp .len2
+.copy:
+    mov rax, [rel vel_concat_next]
+    test rax, rax
+    jnz .have_buf
+    lea rax, [rel vel_concat_buf]
+.have_buf:
+    mov rdi, rax
+    mov r12, rax
+    mov rsi, r8
+    mov rcx, r10
+    rep movsb
+    mov rsi, r9
+    mov rcx, r11
+    rep movsb
+    mov byte [rdi], 0
+    inc rdi
+    mov [rel vel_concat_next], rdi
+    mov rax, r12
+    pop r12
+    ret
+            )");
+        } else {
+            emit_line(R"(
+vel_print_cstr:
+    mov rdi, rsi
+    xor rdx, rdx
+.count:
+    cmp byte [rdi + rdx], 0
+    je .write
+    inc rdx
+    jmp .count
+.write:
+    mov rsi, rdi
+    jmp vel_print_str
+vel_concat:
+    push r12
+    mov r8, rdi
+    mov r9, rsi
+    xor r10, r10
+.len1:
+    cmp byte [r8 + r10], 0
+    je .len2_start
+    inc r10
+    jmp .len1
+.len2_start:
+    xor r11, r11
+.len2:
+    cmp byte [r9 + r11], 0
+    je .copy
+    inc r11
+    jmp .len2
+.copy:
+    mov rax, [rel vel_concat_next]
+    test rax, rax
+    jnz .have_buf
+    lea rax, [rel vel_concat_buf]
+.have_buf:
+    mov rdi, rax
+    mov r12, rax
+    mov rsi, r8
+    mov rcx, r10
+    rep movsb
+    mov rsi, r9
+    mov rcx, r11
+    rep movsb
+    mov byte [rdi], 0
+    inc rdi
+    mov [rel vel_concat_next], rdi
+    mov rax, r12
+    pop r12
+    ret
+            )");
+        }
+    }
 
     void emit_builtins()
     {
@@ -352,11 +526,51 @@ vel_print_newline:
             )";
         }
         emit_line(builtins);
+        emit_runtime_helpers();
 
         // Reserve space in data section for built-in strings
         m_data << "vel_newline db 10\n";
         m_data << "vel_true_str db \"true\"\n";
         m_data << "vel_false_str db \"false\"\n";
+        m_bss << "vel_concat_buf resb 65536\n";
+        m_bss << "vel_concat_next resq 1\n";
+        if (m_target == CodeGenTarget::WindowsX86_64) {
+            m_bss << "vel_stdout_handle resq 1\n";
+        }
+    }
+
+    std::string struct_type_of_expr(Expr* expr)
+    {
+        if (std::holds_alternative<ExprIdent*>(expr->var)) return m_struct_vars[std::get<ExprIdent*>(expr->var)->tok.value.value_or("")];
+        if (std::holds_alternative<ExprStructInit*>(expr->var)) return std::get<ExprStructInit*>(expr->var)->name.value.value_or("");
+        if (std::holds_alternative<ExprField*>(expr->var)) {
+            auto* field = std::get<ExprField*>(expr->var);
+            auto parent = struct_type_of_expr(field->object);
+            auto types = m_struct_field_types.find(parent);
+            if (types != m_struct_field_types.end() && types->second.contains(field->field.value.value_or(""))) {
+                auto type = types->second.at(field->field.value.value_or(""));
+                if (m_struct_fields.contains(type)) return type;
+            }
+        }
+        return {};
+    }
+
+    bool is_string_expr(Expr* expr)
+    {
+        if (std::holds_alternative<ExprStrLit*>(expr->var)) return true;
+        if (std::holds_alternative<ExprIdent*>(expr->var)) return m_string_vars.contains(std::get<ExprIdent*>(expr->var)->tok.value.value_or(""));
+        if (std::holds_alternative<ExprParen*>(expr->var)) return is_string_expr(std::get<ExprParen*>(expr->var)->inner);
+        if (std::holds_alternative<ExprField*>(expr->var)) {
+            auto* field = std::get<ExprField*>(expr->var);
+            auto parent = struct_type_of_expr(field->object);
+            auto types = m_struct_field_types.find(parent);
+            return types != m_struct_field_types.end() && types->second[field->field.value.value_or("")] == "str";
+        }
+        if (std::holds_alternative<ExprBinary*>(expr->var)) {
+            auto* binary = std::get<ExprBinary*>(expr->var);
+            return binary->op.type == TT::Plus && is_string_expr(binary->lhs) && is_string_expr(binary->rhs);
+        }
+        return false;
     }
 
     // Result is pushed onto stack (top of stack = rax after gen_expr)
@@ -430,6 +644,15 @@ vel_print_newline:
 
     void gen_expr_node(ExprBinary* n)
     {
+        if (n->op.type == TT::Plus && is_string_expr(n->lhs) && is_string_expr(n->rhs)) {
+            gen_expr(n->lhs);
+            gen_expr(n->rhs);
+            stack_pop("rsi");
+            stack_pop("rdi");
+            emit_line("    call vel_concat");
+            stack_push("rax");
+            return;
+        }
         gen_expr(n->lhs);
         gen_expr(n->rhs);
         stack_pop("rbx"); // rhs
@@ -515,10 +738,41 @@ vel_print_newline:
         throw std::runtime_error(std::string("code generation for ") + feature + " is not implemented for this target");
     }
 
-    void gen_expr_node(ExprArray*) { unsupported_aggregate("array literals"); }
-    void gen_expr_node(ExprIndex*) { unsupported_aggregate("array indexing"); }
-    void gen_expr_node(ExprField*) { unsupported_aggregate("struct field access"); }
-    void gen_expr_node(ExprStructInit*) { unsupported_aggregate("struct literals"); }
+    void gen_expr_node(ExprArray* n)
+    {
+        Expr wrapper;
+        wrapper.var = n;
+        emit_line("    mov rax, " + static_value(&wrapper));
+        stack_push("rax");
+    }
+    void gen_expr_node(ExprIndex* n)
+    {
+        gen_expr(n->object);
+        gen_expr(n->index);
+        stack_pop("rbx");
+        stack_pop("rax");
+        emit_line("    mov rax, QWORD [rax + rbx * 8]");
+        stack_push("rax");
+    }
+    void gen_expr_node(ExprField* n)
+    {
+        std::string type_name = struct_type_of_expr(n->object);
+        auto fields = m_struct_fields.find(type_name);
+        if (fields == m_struct_fields.end()) unsupported_aggregate("struct field access");
+        auto it = std::find(fields->second.begin(), fields->second.end(), n->field.value.value_or(""));
+        if (it == fields->second.end()) unsupported_aggregate("unknown struct field");
+        gen_expr(n->object);
+        stack_pop("rax");
+        emit_line("    mov rax, QWORD [rax + " + std::to_string(std::distance(fields->second.begin(), it) * 8) + "]");
+        stack_push("rax");
+    }
+    void gen_expr_node(ExprStructInit* n)
+    {
+        Expr wrapper;
+        wrapper.var = n;
+        emit_line("    mov rax, " + static_value(&wrapper));
+        stack_push("rax");
+    }
 
     void gen_expr_node(ExprCall* n)
     {
@@ -555,7 +809,7 @@ vel_print_newline:
         std::visit([&](auto* node) { gen_stmt_node(node); }, stmt->var);
     }
 
-    void gen_stmt_node(StmtStruct*) { unsupported_aggregate("struct declarations"); }
+    void gen_stmt_node(StmtStruct*) { /* declaration is represented in compile-time layout metadata */ }
 
     void gen_stmt_node(StmtVar* n)
     {
@@ -564,7 +818,12 @@ vel_print_newline:
         // NOW record the variable: its stack_loc is the slot that was just pushed
         // m_stack_size was incremented by the final push inside gen_expr
         // So var lives at stack_loc = m_stack_size - 1
-        define_var(n->name.value.value_or(""), n->is_mut);
+        const auto name = n->name.value.value_or("");
+        define_var(name, n->is_mut);
+        if (is_string_expr(n->init) || (n->type_ref && n->type_ref->kind == TypeKind::Scalar && n->type_ref->scalar == VelType::Str))
+            m_string_vars[name] = true;
+        if (n->type_ref && n->type_ref->kind == TypeKind::Struct)
+            m_struct_vars[name] = n->type_ref->name;
     }
 
     void gen_stmt_node(StmtAssign* n)
@@ -626,7 +885,11 @@ vel_print_newline:
     {
         auto* expr = n->value;
 
-        if (std::holds_alternative<ExprStrLit*>(expr->var)) {
+        if (is_string_expr(expr) && !std::holds_alternative<ExprStrLit*>(expr->var)) {
+            gen_expr(expr);
+            stack_pop("rsi");
+            emit_line("    call vel_print_cstr");
+        } else if (std::holds_alternative<ExprStrLit*>(expr->var)) {
             auto* sl = std::get<ExprStrLit*>(expr->var);
             auto [label, len] = intern_string(sl->tok.value.value_or(""));
             emit_line("    mov rsi, " + label);

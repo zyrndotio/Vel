@@ -205,6 +205,29 @@ private:
         return VelType::Unknown;
     }
 
+    void validate_value_ref(const TypeRef* expected, Expr* value)
+    {
+        if (!expected) return;
+        if (expected->kind == TypeKind::Scalar) {
+            auto actual = expression_type(value);
+            if (!compatible(expected->scalar, actual))
+                fail("expected " + type_ref_str(expected) + ", got " + veltype_str(actual));
+            return;
+        }
+        if (expected->kind == TypeKind::Array) {
+            if (!std::holds_alternative<ExprArray*>(value->var)) fail("expected array value");
+            for (auto* element : std::get<ExprArray*>(value->var)->elements)
+                validate_value_ref(expected->element, element);
+            return;
+        }
+        if (expected->kind == TypeKind::Struct) {
+            if (!std::holds_alternative<ExprStructInit*>(value->var)) fail("expected struct '" + expected->name + "'");
+            auto actual_name = std::get<ExprStructInit*>(value->var)->name.value.value_or("");
+            if (actual_name != expected->name) fail("expected struct '" + expected->name + "', got '" + actual_name + "'");
+            expression_type(value);
+        }
+    }
+
     VelType expression_type_node(const ExprStructInit* node)
     {
         const auto name = node->name.value.value_or("");
@@ -218,9 +241,7 @@ private:
             if (seen.contains(field_name)) fail("duplicate field '" + field_name + "'");
             seen[field_name] = true;
             auto expected = structure->second.at(field_name);
-            auto actual = expression_type(value);
-            if (expected->kind == TypeKind::Scalar && expected->scalar != actual)
-                fail("field '" + field_name + "' expects " + type_ref_str(expected) + ", got " + veltype_str(actual));
+            validate_value_ref(expected, value);
         }
         if (seen.size() != structure->second.size())
             fail("struct literal '" + name + "' is missing a field");

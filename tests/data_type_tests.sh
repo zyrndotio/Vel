@@ -4,6 +4,7 @@ VEL="${1:?usage: data_type_tests.sh /path/to/vel}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 "$VEL" check "$ROOT/tests/data_types.vel" >/dev/null
+"$VEL" check "$ROOT/tests/aggregates_complex.vel" >/dev/null
 
 expect_failure() {
     local name="$1"
@@ -25,5 +26,13 @@ expect_failure bad_index 'let values: [int] = [1, 2]; let x: int = values[true];
 expect_failure missing_field 'struct Point { x: int, y: int } let p: Point = Point { x: 1 };' "missing a field"
 expect_failure unknown_field 'struct Point { x: int } let p: Point = Point { x: 1, y: 2 };' "has no field 'y'"
 expect_failure bad_concat 'let value: str = "hello" + 1;' 'operator + requires matching numeric types or two strings'
+
+if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+    "$VEL" build "$ROOT/tests/aggregates_complex.vel" >/dev/null
+    output="$($ROOT/tests/aggregates_complex)"
+    expected=$'3\nAB\nAB'
+    [[ "$output" == "$expected" ]]
+    rm -f "$ROOT/tests/aggregates_complex"
+fi
 
 echo "Vel aggregate and string type-checker tests passed."

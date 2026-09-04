@@ -32,10 +32,14 @@ static void usage()
     std::cerr << "Usage:\n";
     std::cerr << "  vel <file.vel>            compile and run for the host target\n";
     std::cerr << "  vel build <file.vel>      compile to native binary for the host target\n";
+    std::cerr << "  vel new <project>         create a starter Vel project\n";
+    std::cerr << "  vel run <file.vel>       compile and run for the host target\n";
     std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
     std::cerr << "  vel asm   <file.vel> [target] emit target assembly\n";
     std::cerr << "                             targets: linux-x86_64, macos-x86_64, windows-x86_64\n";
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
+    std::cerr << "  vel doctor               inspect native tool availability\n";
+    std::cerr << "  vel clean <file.vel>     remove generated artifacts\n";
     std::cerr << "  vel version               print version\n";
     std::cerr << "  vel help                  show this help\n";
 }
@@ -193,6 +197,44 @@ static std::string compile(const std::string& vel_path, bool verbose = false)
     return bin_out;
 }
 
+static int tool_available(const char* tool)
+{
+#if defined(_WIN32)
+    std::string command = "where " + std::string(tool) + " >NUL 2>NUL";
+#else
+    std::string command = "command -v " + std::string(tool) + " >/dev/null 2>&1";
+#endif
+    return std::system(command.c_str()) == 0 ? 0 : 1;
+}
+
+static bool create_project(const fs::path& root)
+{
+    if (fs::exists(root)) {
+        std::cerr << "[Vel] Project path already exists: " << root << "\n";
+        return false;
+    }
+    fs::create_directories(root / "src");
+    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.2.0\"\nentry = \"src/main.vel\"\n";
+    std::ofstream(root / "src/main.vel") << "fn main() {\n    print \"Hello from Vel\";\n}\n\nmain();\n";
+    std::ofstream(root / "README.md") << "# " << root.filename().string() << "\n\nA Vel project.\n\nRun with `vel run src/main.vel`.\n";
+    std::cout << "[Vel] Created project: " << root << "\n";
+    return true;
+}
+
+static void clean_artifacts(const fs::path& input)
+{
+    fs::path dir = input.parent_path().empty() ? fs::current_path() : input.parent_path();
+    auto stem = input.stem().string();
+    for (const auto& suffix : {".asm", ".o", ""}) {
+        auto path = dir / (stem + suffix);
+        if (fs::exists(path) && fs::is_regular_file(path)) fs::remove(path);
+#if defined(_WIN32)
+        auto exe = dir / (stem + ".exe");
+        if (fs::exists(exe)) fs::remove(exe);
+#endif
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
@@ -207,8 +249,20 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
+    if (cmd == "new" && argc >= 3) {
+        return create_project(fs::path(argv[2])) ? EXIT_SUCCESS : EXIT_FAILURE;
+    }
+
+    if (cmd == "doctor") {
+        std::cout << "Vel doctor\n";
+        for (const char* tool : {"cmake", "nasm"})
+            std::cout << "  " << tool << ": " << (tool_available(tool) == 0 ? "available" : "missing") << "\n";
+        std::cout << "  host native backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";
+        return EXIT_SUCCESS;
+    }
+
     if (cmd == "version") {
-        std::cout << "Vel 0.1.1\n";
+        std::cout << "Vel 0.2.0\n";
         std::cout << "Frontend: portable C++23\n";
         std::cout << "Native backends: Linux x86-64, macOS x86-64, Windows x86-64\n";
         std::cout << "Host backend: " << (native_backend_available(host_target()) ? "available" : "unavailable") << "\n";
@@ -256,9 +310,20 @@ int main(int argc, char* argv[])
         return EXIT_SUCCESS;
     }
 
-    if (cmd == "build" && argc >= 3) {
+    if ((cmd == "build" || cmd == "run") && argc >= 3) {
         auto bin = compile(argv[2], /*verbose=*/true);
+        if (cmd == "run") {
+            int ret = system(shell_quote(bin).c_str());
+            std::remove(bin.c_str());
+            return ret;
+        }
         std::cout << "[Vel] Built: " << bin << "\n";
+        return EXIT_SUCCESS;
+    }
+
+    if (cmd == "clean" && argc >= 3) {
+        clean_artifacts(fs::path(argv[2]));
+        std::cout << "[Vel] Cleaned generated artifacts for " << argv[2] << "\n";
         return EXIT_SUCCESS;
     }
 

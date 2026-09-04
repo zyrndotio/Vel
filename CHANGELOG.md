@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.0] - 2026-09-04
+
+### Added
+- Added `vel new`, `vel run`, `vel doctor`, and `vel clean` project/developer commands.
+- Added a Vel logo asset and included it in packages and the Windows installer.
+- Added native pointer-based array literals/indexing and struct field-offset access for static aggregate layouts.
+- Added runtime string concatenation with persistent buffer allocation and string-aware printing.
+- Added complex nested aggregate fixtures covering multidimensional arrays, nested structs, empty strings, and repeated concatenation.
+- Added a tag-triggered release workflow for Linux, macOS, and Windows artifacts, including the Inno Setup installer.
+
+### Changed
+- Updated the roadmap and documentation for the v0.2.0 frontend and native-runtime milestone.
+
 ## [0.1.1] - 2026-09-04
 
 ### Added

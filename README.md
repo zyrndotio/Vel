@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/vel-logo.png" alt="Vel logo" width="180">
+</p>
+
 # Vel Programming Language
 
 <div align="center">
@@ -318,7 +322,7 @@ vel version             Display compiler version
 
 ## 🛣️ Roadmap
 
-### Current (v0.1.0) ✅
+### Current (v0.2.0) ✅
 - [x] Variables (`let` / `mut`)
 - [x] Basic types (`int`, `float`, `str`, `bool`)
 - [x] Arithmetic & comparison operators
@@ -327,17 +331,19 @@ vel version             Display compiler version
 - [x] Loops (`while`, `loop`, `break`)
 - [x] Print built-in function
 - [x] Assembly code generation
+- [x] Cross-platform targets and release packaging
+- [x] Arrays, structs, and string concatenation in the parser/type checker
+- [x] `vel new`, `vel run`, `vel doctor`, and `vel clean`
 
-### Planned (v0.2.0) 🚀
-- [ ] String concatenation
-- [ ] Arrays and slicing
+### Planned (v0.2.1) 🚀
+- [ ] Native array and struct layout improvements
+- [ ] String methods and bounds checks
 - [ ] Better error messages with diagnostics
 - [ ] Type inference improvements
 - [ ] Module system basics
 
 ### Future (v1.0.0) 🔮
-- [ ] Windows target (PE/COFF)
-- [ ] macOS target (Mach-O)
+- [ ] ARM64 targets
 - [ ] Standard library
 - [ ] Package manager
 - [ ] Optimization passes

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(vel VERSION 0.1.1 LANGUAGES CXX)
+project(vel VERSION 0.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +20,8 @@ if(BUILD_TESTING AND UNIX)
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/type_checker_tests.sh $<TARGET_FILE:vel>)
     add_test(NAME vel_data_types
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/data_type_tests.sh $<TARGET_FILE:vel>)
+    add_test(NAME vel_cli_commands
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_commands.sh $<TARGET_FILE:vel>)
 endif()
 
 # Compiler warnings
@@ -35,6 +37,7 @@ install(TARGETS vel RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
                        BUNDLE DESTINATION .
                        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES README.md LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(DIRECTORY assets/ DESTINATION share/vel/assets)
 install(DIRECTORY docs/ DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY examples/ DESTINATION share/vel/examples)
 

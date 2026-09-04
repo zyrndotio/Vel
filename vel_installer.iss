@@ -1,7 +1,7 @@
 [Setup]
 AppName=Vel Programming Language
 AppId={{A9E8D7C6-B5A4-4321-9F8E-7D6C5B4A3F2E}
-AppVersion=0.1.1
+AppVersion=0.2.0
 AppPublisher=Zyrndotio
 DefaultDirName={localappdata}\Programs\Vel
 DefaultGroupName=Vel
@@ -24,6 +24,7 @@ ChangesEnvironment=yes
 ; Grab your freshly built binary from your MSBuild Release tree
 Source: "build\Release\vel.exe"; DestDir: "{app}\bin"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\vel-logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "examples\*"; DestDir: "{app}\examples"; Flags: recursesubdirs createallsubdirs ignoreversion
 

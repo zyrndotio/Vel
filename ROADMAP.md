@@ -11,10 +11,10 @@ This document outlines the planned features and improvements for the Vel program
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  v0.1.0 ───→ v0.2.0 ───→ v0.3.0 ───→ v0.4.0 ───→ v1.0.0  │
-│  (Released)  (Released)  (Current)   (6 months)  (12 months)│
-│  Early       Core Lang.  Modules     Advanced   Production  │
-│  Build       Features    System      Features   Ready       │
+│  v0.1.0 ───→ v0.2.0 ───→ v0.3.1 ───→ v0.3.2 ───→ v1.0.0  │
+│  (Released)  (Released)  (Released)  (In design) (Future)  │
+│  Early       Core Lang.  Tooling     App         Production│
+│  Build       Features    Foundations Foundations Ready     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -153,7 +153,8 @@ let name = "Vel";     // inferred as str
 - [ ] Path-aware diagnostics with source snippets and actionable hints
 - [x] Cross-platform release archives and automated GitHub publishing
 - [x] Initial native string allocation ABI and large-concatenation regression
-- [x] Complete array/struct runtime layout, ownership, and bounds checking
+- [x] Scalar array layout, ownership boundary, and bounds checking foundation
+- [ ] Complete recursive aggregate layout, ownership, and cleanup semantics
 
 See [ECOSYSTEM_ROADMAP.md](docs/ECOSYSTEM_ROADMAP.md) for the editor, package-manager, and desktop-application plan.
 
@@ -169,7 +170,7 @@ Vel should remain primarily implemented in **C++23**, with assembly limited to t
 
 ### Roadmap audit — September 2026
 
-The v0.3.0 implementation delivered native string allocation, dynamic scalar arrays, indexed mutation, append growth, nested aggregate runtime behavior, struct layout/access, aggregate calls, allocation-failure paths, and Linux/macOS/Windows x86-64 release validation. These items are now reflected as completed above rather than remaining as planned work.
+The v0.3.0 implementation delivered native string allocation, dynamic scalar arrays, indexed mutation, append growth, struct access foundations, aggregate-call foundations, allocation-failure paths, and Linux/macOS/Windows x86-64 release validation. Recursive aggregate ownership and cleanup are intentionally carried into v0.3.2 rather than being treated as production-complete.
 
 The language is ready today for native command-line tools, application cores, data-processing programs, and other programs that fit the supported language and target ABI. It is **not yet a complete desktop GUI platform**: Vel does not currently ship a stable window/event/drawing API, module and dependency system, formatter, language server, debugger, resource bundler, or native `.app`/`.deb`/Windows application packaging workflow. Those capabilities are required before claiming a turnkey creative desktop-application experience.
 
@@ -179,6 +180,24 @@ The language is ready today for native command-line tools, application cores, da
 - [ ] Atomic replacement through a platform-native helper
 - [ ] Rollback to the previous compiler after failed update
 - [ ] Update-channel selection for stable and prerelease builds
+
+---
+
+## v0.3.2 — Application Foundations 🚧
+
+**Status**: In design and implementation
+**Focus**: Make Vel useful for real native application foundations while defining a safe path toward desktop APIs.
+
+- [ ] Versioned runtime ABI for strings, arrays, structs, ownership, and allocation failure
+- [ ] Standard-library boundary for arguments, environment, paths, files, processes, and time
+- [ ] Stable project manifest semantics and project-root discovery
+- [ ] Structured diagnostics with source locations and stable error categories
+- [ ] Multi-file/import design and implementation
+- [ ] ABI conformance and runtime behavior fixtures across supported targets
+- [ ] Desktop window/event/resource interface design with an optional backend experiment
+- [ ] Release archives that include implemented runtime/library support rather than placeholder bulk
+
+The detailed design is in [docs/V0.3.2_DESIGN.md](docs/V0.3.2_DESIGN.md). v0.3.2 does not claim a complete widget toolkit, graphics engine, ARM64 backend, package registry, or production-ready GUI application bundle.
 
 ---
 

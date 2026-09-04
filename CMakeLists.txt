@@ -24,6 +24,8 @@ if(BUILD_TESTING AND UNIX)
              COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/cli_commands.sh $<TARGET_FILE:vel>)
     add_test(NAME vel_source_tests
              COMMAND $<TARGET_FILE:vel> test ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+    add_test(NAME vel_project_manifest
+             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/tests/project_manifest.sh $<TARGET_FILE:vel>)
 endif()
 
 # Compiler warnings
@@ -42,6 +44,7 @@ install(FILES README.md LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY assets/ DESTINATION share/vel/assets)
 install(DIRECTORY docs/ DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY examples/ DESTINATION share/vel/examples)
+install(DIRECTORY templates/ DESTINATION share/vel/templates)
 
 # CPack selects a native package format for each supported host platform.
 set(CPACK_PACKAGE_NAME "Vel")

@@ -30,6 +30,8 @@ Perfect for applications that need to be fast, maintainable, and reliable.
 
 See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), and [runtime ABI](docs/RUNTIME_ABI.md) for details.
 
+The next application-platform milestone is documented in the [v0.3.2 design](docs/V0.3.2_DESIGN.md).
+
 ---
 
 ## ⚡ Quick Start

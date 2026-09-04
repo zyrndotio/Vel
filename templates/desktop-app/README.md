@@ -5,8 +5,10 @@ This is a minimal cross-platform Vel application foundation. It is intentionally
 ## Commands
 
 ```bash
-vel check src/main.vel
-vel build src/main.vel
+vel check .
+vel test .
+vel build .
+vel run .
 ```
 
-Run `./src/main` on Linux/macOS or `src\\main.exe` on Windows after a successful native build. Windowing, event dispatch, resources, and platform application bundles are planned rather than included in this starter.
+The manifest resolves `src/main.vel` as the entry point and `tests/` as the source-test directory. Run `./src/main` on Linux/macOS or `src\\main.exe` on Windows after a successful native build. Windowing, event dispatch, resources, and platform application bundles are planned rather than included in this starter.

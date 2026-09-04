@@ -1,7 +1,7 @@
 [Setup]
 AppName=Vel Programming Language
 AppId={{A9E8D7C6-B5A4-4321-9F8E-7D6C5B4A3F2E}
-AppVersion=0.2.0
+AppVersion=0.3.1
 AppPublisher=Zyrndotio
 DefaultDirName={localappdata}\Programs\Vel
 DefaultGroupName=Vel
@@ -27,6 +27,7 @@ Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "examples\*"; DestDir: "{app}\examples"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "templates\*"; DestDir: "{app}\templates"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Registry]
 ; Append the binary directory to the current user's PATH without elevation.

@@ -41,39 +41,39 @@ global _start
 vel new <project>
 ```
 
-Creates a starter project with `vel.toml`, `src/main.vel`, and a project README.
+Creates a starter project with `vel.toml`, `src/main.vel`, `tests/`, and a project README. The manifest declares the entry point and test directory.
 
 ### `run` — Compile and Run
 
 ```
-vel run <file.vel>
+vel run <file.vel|project>
 ```
 
-Compiles and executes a Vel program for the host target.
+Compiles and executes a Vel program for the host target. A project directory or `vel.toml` resolves its declared `entry` file.
 
 ### `check` — Validate Without Native Tools
 
 ```
-vel check <file.vel>
+vel check <file.vel|project>
 ```
 
-Tokenizes and parses a Vel source file without assembling or linking it. This is the recommended validation command on Windows and macOS and is also useful in editor integrations.
+Tokenizes and parses a Vel source file without assembling or linking it. When passed a project directory or `vel.toml`, it resolves the manifest's `entry` path first. This is the recommended validation command on Windows and macOS and is also useful in editor integrations.
 
 ### `test` — Check Vel Test Sources
 
 ```
-vel test [path]
+vel test [path|project]
 ```
 
-Recursively discovers `.vel` files under `tests/` when no path is provided, or under the supplied file/directory, then tokenizes, parses, and type-checks each source. This portable first version validates source fixtures; runtime assertions, test filters, and test reporting are planned for the project test system.
+Recursively discovers `.vel` files under `tests/` when no path is provided, or under the supplied file/directory. When passed a project directory or `vel.toml`, it uses the manifest's `test` directory. Each source is tokenized, parsed, and type-checked. This portable first version validates source fixtures; runtime assertions, test filters, and test reporting are planned for the project test system.
 
 ### `build` — Compile to Binary
 
 ```
-vel build <file.vel>
+vel build <file.vel|project>
 ```
 
-Compiles a Vel program to a native binary executable on Linux x86-64.
+Compiles a Vel program to a native binary executable for the host target. A project directory or `vel.toml` resolves its declared `entry` file.
 
 **Requirements:**
 - NASM (assembler)

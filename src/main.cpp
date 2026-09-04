@@ -29,16 +29,71 @@ static std::string read_file(const std::string& path)
     return ss.str();
 }
 
+struct ProjectManifest {
+    fs::path root;
+    fs::path entry;
+    fs::path tests;
+};
+
+static std::string trim(const std::string& value)
+{
+    const auto first = value.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return {};
+    const auto last = value.find_last_not_of(" \t\r\n");
+    return value.substr(first, last - first + 1);
+}
+
+static std::string manifest_value(const std::string& line, const std::string& key)
+{
+    const auto equals = line.find('=');
+    if (equals == std::string::npos || trim(line.substr(0, equals)) != key) return {};
+    auto value = trim(line.substr(equals + 1));
+    if (value.size() >= 2 && value.front() == '"' && value.back() == '"')
+        value = value.substr(1, value.size() - 2);
+    return value;
+}
+
+static ProjectManifest load_manifest(const fs::path& input)
+{
+    const fs::path manifest = fs::is_directory(input) ? input / "vel.toml" : input;
+    if (!fs::is_regular_file(manifest)) {
+        std::cerr << "[Vel] Project manifest not found: " << manifest << "\n";
+        exit(EXIT_FAILURE);
+    }
+    ProjectManifest project{manifest.parent_path(), "src/main.vel", "tests"};
+    std::ifstream file(manifest);
+    std::string line;
+    while (std::getline(file, line)) {
+        if (!line.empty() && line.front() == '#') continue;
+        if (auto value = manifest_value(line, "entry"); !value.empty()) project.entry = value;
+        if (auto value = manifest_value(line, "test"); !value.empty()) project.tests = value;
+    }
+    project.entry = project.root / project.entry;
+    project.tests = project.root / project.tests;
+    if (!fs::is_regular_file(project.entry)) {
+        std::cerr << "[Vel] Manifest entry does not exist: " << project.entry << "\n";
+        exit(EXIT_FAILURE);
+    }
+    return project;
+}
+
+static fs::path resolve_source(const fs::path& input)
+{
+    if (fs::is_directory(input) || input.extension() == ".toml")
+        return load_manifest(input).entry;
+    return input;
+}
+
 static void usage()
 {
     std::cerr << "Vel Programming Language Compiler\n";
     std::cerr << "Usage:\n";
     std::cerr << "  vel <file.vel>            compile and run for the host target\n";
-    std::cerr << "  vel build <file.vel>      compile to native binary for the host target\n";
+    std::cerr << "  vel build <file.vel|dir>  compile to native binary for the host target\n";
     std::cerr << "  vel new <project>         create a starter Vel project\n";
     std::cerr << "  vel run <file.vel>       compile and run for the host target\n";
     std::cerr << "  vel test [path]          check all .vel files in a path\n";
-    std::cerr << "  vel check <file.vel>      tokenize and parse without native tools\n";
+    std::cerr << "  vel check <file|dir>      tokenize and parse without native tools\n";
     std::cerr << "  vel asm   <file.vel> [target] emit target assembly\n";
     std::cerr << "                             targets: linux-x86_64, macos-x86_64, windows-x86_64\n";
     std::cerr << "  vel tokens <file.vel>     print token stream (debug)\n";
@@ -298,7 +353,8 @@ static bool create_project(const fs::path& root)
         return false;
     }
     fs::create_directories(root / "src");
-    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.3.1\"\nentry = \"src/main.vel\"\n";
+    fs::create_directories(root / "tests");
+    std::ofstream(root / "vel.toml") << "name = \"" << root.filename().string() << "\"\nversion = \"0.3.1\"\nentry = \"src/main.vel\"\ntest = \"tests\"\n";
     std::ofstream(root / "src/main.vel") << "fn main() {\n    print \"Hello from Vel\";\n}\n\nmain();\n";
     std::ofstream(root / "README.md") << "# " << root.filename().string() << "\n\nA Vel project.\n\nRun with `vel run src/main.vel`.\n";
     std::cout << "[Vel] Created project: " << root << "\n";
@@ -398,16 +454,21 @@ int main(int argc, char* argv[])
     }
 
     if (cmd == "check" && argc >= 3) {
-        auto src = read_file(argv[2]);
+        const auto source = resolve_source(fs::path(argv[2]));
+        auto src = read_file(source.string());
         Arena arena(1024 * 1024 * 8);
         auto prog = run_parser(run_tokenizer(src), arena);
         run_type_checker(prog);
-        std::cout << "[Vel] OK: " << argv[2] << "\n";
+        std::cout << "[Vel] OK: " << source << "\n";
         return EXIT_SUCCESS;
     }
 
     if (cmd == "test") {
         fs::path root = argc >= 3 ? fs::path(argv[2]) : fs::current_path() / "tests";
+        if (fs::is_directory(root) && fs::is_regular_file(root / "vel.toml"))
+            root = load_manifest(root).tests;
+        else if (root.extension() == ".toml")
+            root = load_manifest(root).tests;
         return test_sources(root);
     }
 
@@ -432,7 +493,8 @@ int main(int argc, char* argv[])
     }
 
     if ((cmd == "build" || cmd == "run") && argc >= 3) {
-        auto bin = compile(argv[2], /*verbose=*/true);
+        const auto source = resolve_source(fs::path(argv[2]));
+        auto bin = compile(source.string(), /*verbose=*/true);
         if (cmd == "run") {
             int ret = system(shell_quote(bin).c_str());
             std::remove(bin.c_str());
@@ -443,7 +505,7 @@ int main(int argc, char* argv[])
     }
 
     if (cmd == "clean" && argc >= 3) {
-        clean_artifacts(fs::path(argv[2]));
+        clean_artifacts(resolve_source(fs::path(argv[2])));
         std::cout << "[Vel] Cleaned generated artifacts for " << argv[2] << "\n";
         return EXIT_SUCCESS;
     }

@@ -26,7 +26,7 @@ jobs:
           mkdir -p dist/vel-linux-x86_64
           cp build/vel dist/vel-linux-x86_64/
           cp README.md LICENSE dist/vel-linux-x86_64/
-          cp -r docs assets examples dist/vel-linux-x86_64/
+          cp -r docs assets examples templates dist/vel-linux-x86_64/
           tar -czf dist/vel-${GITHUB_REF_NAME}-linux-x86_64.tar.gz -C dist vel-linux-x86_64
           mkdir -p release_upload
           cp dist/vel-*.tar.gz release_upload/
@@ -50,7 +50,7 @@ jobs:
           mkdir -p dist/vel-macos-x86_64
           cp build/vel dist/vel-macos-x86_64/
           cp README.md LICENSE dist/vel-macos-x86_64/
-          cp -r docs assets examples dist/vel-macos-x86_64/
+          cp -r docs assets examples templates dist/vel-macos-x86_64/
           tar -czf dist/vel-${GITHUB_REF_NAME}-macos-x86_64.tar.gz -C dist vel-macos-x86_64
           mkdir -p release_upload
           cp dist/vel-*.tar.gz release_upload/
@@ -78,7 +78,7 @@ jobs:
           New-Item -ItemType Directory -Force dist\vel-windows-x86_64 | Out-Null
           Copy-Item build\Release\vel.exe dist\vel-windows-x86_64\
           Copy-Item README.md,LICENSE dist\vel-windows-x86_64\
-          Copy-Item -Recurse docs,assets,examples dist\vel-windows-x86_64\
+          Copy-Item -Recurse docs,assets,examples,templates dist\vel-windows-x86_64\
           Compress-Archive -Path dist\vel-windows-x86_64 -DestinationPath dist\vel-${env:GITHUB_REF_NAME}-windows-x86_64.zip
           New-Item -ItemType Directory -Force release_upload | Out-Null
           Copy-Item dist\vel-*.zip release_upload\

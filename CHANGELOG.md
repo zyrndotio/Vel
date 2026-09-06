@@ -7,29 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [Unreleased] — v0.3.2 development
+## [0.3.2] - 2026-09-06
 
 ### Added
 - Added manifest-aware project resolution for `vel check`, `vel test`, `vel build`, `vel run`, and `vel clean`.
 - Added the `vel_std` cross-platform C ABI host shim for environment lookup, current-directory discovery, file existence/read/write, process execution, and owned text buffers.
 - Added runtime smoke coverage for the host shim and expanded the CTest suite to eight passing tests.
-- Added the `examples/desktop-app` application-core project with Vel source, tests, assets, and Linux/macOS and Windows build scripts.
+- Added the `projects/desktop-app` application-core project with Vel source, tests, assets, and Linux/macOS and Windows build scripts.
 - Added v0.3.2 standard-library, runtime ABI, and Windows trust design documentation.
+- Added C and assembly interoperability guidance, including generated assembly boundaries and the packaged native host ABI.
 
 ### Changed
-- Release packages now include the host shim library, public header, templates, and desktop example.
+- Release packages now include the host shim library, public header, projects tree and desktop example.
 - CMake, CPack, and the tagged GitHub Actions workflow derive package/compiler version metadata from the release tag.
 - Windows installer publisher metadata now identifies Zyrndotio and links to the official repository, support, and release pages.
+- Consolidated all console and desktop sample projects under the canonical `projects/` tree.
+- Added hardened release compiler flags, a 64 MiB source-file safety limit, and an optional sanitizer configuration.
 
 ### Security
 - Documented that publisher metadata alone cannot remove SmartScreen warnings; trusted distribution requires Authenticode signing with a protected maintainer certificate and timestamp.
+
+### Validation
+- Verified default and tag-versioned v0.3.2 builds, all eight CTest entries, the runtime smoke test, the desktop application project, and the generated Debian package contents.
 
 ## [0.3.1] - 2026-09-04
 
 ### Added
 - Added `vel test [path]`, a portable source-validation command that recursively discovers `.vel` files, tokenizes them, parses them, and runs the type checker. With no path, the command checks the project's `tests/` directory; a file or directory can be supplied for focused validation.
 - Added CTest coverage for the `vel test` workflow. The default test suite now includes five Vel source fixtures in addition to the existing compiler and CLI regression tests.
-- Added a cross-platform desktop application starter under `templates/desktop-app/`, including a `vel.toml` manifest, a stable-language `src/main.vel` entry point, a project README, and generated-artifact cleanup rules.
+- Added a cross-platform desktop application starter under `projects/desktop-app/`, including a `vel.toml` manifest, a stable-language `src/main.vel` entry point, a project README, and generated-artifact cleanup rules.
 - Added `docs/DESKTOP_QUICKSTART.md`, which documents installation, project creation, source checking, native builds, and host execution on supported desktop targets.
 
 ### Changed

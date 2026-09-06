@@ -1,6 +1,0 @@
-// Portable source fixture for `vel test`.
-fn main() {
-    print "desktop project source is valid";
-}
-
-main();

@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <algorithm>
+#include <cstdint>
 #include <filesystem>
 #include <cstdio>
 #include <fstream>
@@ -16,13 +17,20 @@
 #include "type_checker.hpp"
 
 #ifndef VEL_VERSION_STRING
-#define VEL_VERSION_STRING "0.3.1"
+#define VEL_VERSION_STRING "0.3.2"
 #endif
 
 namespace fs = std::filesystem;
 
 static std::string read_file(const std::string& path)
 {
+    constexpr std::uintmax_t max_source_bytes = 64 * 1024 * 1024;
+    std::error_code size_error;
+    const auto size = fs::file_size(path, size_error);
+    if (!size_error && size > max_source_bytes) {
+        std::cerr << "[Vel] Source file is larger than the 64 MiB safety limit: " << path << "\n";
+        exit(EXIT_FAILURE);
+    }
     std::ifstream f(path);
     if (!f.is_open()) {
         std::cerr << "[Vel] Cannot open file: " << path << "\n";

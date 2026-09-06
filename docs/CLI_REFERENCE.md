@@ -24,7 +24,7 @@ Tokenizes, parses, and generates assembly for a Vel source file. Displays the ge
 
 **Example:**
 ```bash
-vel examples/hello.vel
+vel projects/console/hello.vel
 ```
 
 **Output:**
@@ -82,7 +82,7 @@ Compiles a Vel program to a native binary executable for the host target. A proj
 
 **Example:**
 ```bash
-vel build examples/hello.vel
+vel build projects/console/hello.vel
 ./hello
 ```
 
@@ -107,8 +107,8 @@ Generates assembly and writes it to standard output without running linking step
 
 **Example:**
 ```bash
-vel asm examples/counter.vel
-vel asm examples/counter.vel > counter.asm  # Save the assembly
+vel asm projects/console/counter.vel
+vel asm projects/console/counter.vel > counter.asm  # Save the assembly
 ```
 
 **Output:**
@@ -152,7 +152,7 @@ Lexical analysis only. Displays all tokens from the source file with line and co
 
 **Example:**
 ```bash
-vel tokens examples/hello.vel
+vel tokens projects/console/hello.vel
 ```
 
 **Output:**
@@ -183,7 +183,7 @@ vel version
 
 **Output:**
 ```
-Vel 0.3.1
+Vel 0.3.2
 Frontend: portable C++23
 Native backends: Linux x86-64, macOS x86-64, Windows x86-64
 ```
@@ -230,18 +230,18 @@ vel nonexistent.vel    # Error: file not found
 
 ### Example 1: View Tokens
 ```bash
-vel tokens examples/hello.vel
+vel tokens projects/console/hello.vel
 ```
 
 ### Example 2: Generate Assembly
 ```bash
-vel asm examples/counter.vel > counter.asm
+vel asm projects/console/counter.vel > counter.asm
 cat counter.asm
 ```
 
 ### Example 3: Compile to Binary (Linux)
 ```bash
-vel build examples/functions.vel
+vel build projects/console/functions.vel
 ./functions
 ```
 
@@ -316,7 +316,7 @@ vel build myprogram.vel
 
 ```bash
 # Test all examples
-for example in examples/*.vel; do
+for example in projects/console/*.vel; do
     echo "Testing $example"
     vel asm "$example" > /dev/null 2>&1
     if [ $? -eq 0 ]; then
@@ -338,7 +338,7 @@ echo "Building compiler..."
 g++ -std=c++23 -o vel src/main.cpp
 
 echo "Testing examples..."
-for file in examples/*.vel; do
+for file in projects/console/*.vel; do
     ./vel tokens "$file" > /dev/null
     ./vel asm "$file" > /dev/null
 done
@@ -395,7 +395,7 @@ Currently none, but planned for future versions:
 
 ### PowerShell Example
 ```powershell
-Get-ChildItem examples/*.vel | ForEach-Object {
+Get-ChildItem projects/console/*.vel | ForEach-Object {
     Write-Host "Compiling $_"
     ./vel asm $_
 }
@@ -404,7 +404,7 @@ Get-ChildItem examples/*.vel | ForEach-Object {
 ### Bash Example
 ```bash
 #!/bin/bash
-for file in examples/*.vel; do
+for file in projects/console/*.vel; do
     echo "Processing $file"
     ./vel asm "$file"
 done
@@ -417,7 +417,7 @@ import os
 
 for file in os.listdir('examples'):
     if file.endswith('.vel'):
-        result = subprocess.run(['./vel', 'asm', f'examples/{file}'])
+        result = subprocess.run(['./vel', 'asm', f'projects/{file}'])
         print(f"Exit code: {result.returncode}")
 ```
 

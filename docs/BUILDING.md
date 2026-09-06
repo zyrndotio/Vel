@@ -136,7 +136,7 @@ cd Vel
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 ```
 
-**Note**: The compiler can emit macOS x86-64 Mach-O assembly with `./vel asm examples/hello.vel macos-x86_64`. Native macOS linking requires an x86-64 macOS host with NASM and Apple `ld`; ARM64 native output is not supported yet.
+**Note**: The compiler can emit macOS x86-64 Mach-O assembly with `./vel asm projects/console/hello.vel macos-x86_64`. Native macOS linking requires an x86-64 macOS host with NASM and Apple `ld`; ARM64 native output is not supported yet.
 
 ---
 
@@ -149,20 +149,20 @@ After building, verify everything works:
 ./vel version
 
 # Test 2: Tokenize a program
-./vel tokens examples/hello.vel
+./vel tokens projects/console/hello.vel
 
 # Test 3: Generate host assembly
-./vel asm examples/hello.vel
+./vel asm projects/console/hello.vel
 
 # Optional: Generate macOS x86-64 Mach-O assembly
-./vel asm examples/hello.vel macos-x86_64
+./vel asm projects/console/hello.vel macos-x86_64
 
 # Test 4: Validate without native tools (all desktop OSes)
-./vel check examples/hello.vel
+./vel check projects/console/hello.vel
 
 # Test 5: Compile to a binary (Linux x86-64 only)
-./vel build examples/hello.vel
-./examples/hello  # Run the generated binary
+./vel build projects/console/hello.vel
+./projects/console/hello  # Run the generated binary
 ```
 
 All tests should complete without errors.
@@ -248,7 +248,7 @@ g++ -std=c++23 -O2 -Wall -Wextra -Wpedantic -fno-lto -o vel src/main.cpp
 git clone https://github.com/zyrndotio/Vel.git
 cd Vel
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
-./vel examples/hello.vel
+./vel projects/console/hello.vel
 ```
 
 ### Option 2: System-Wide Installation (Linux)
@@ -335,7 +335,7 @@ sudo rm /usr/local/bin/vel
 
 After building:
 
-1. **Run examples**: `./vel examples/hello.vel`
+1. **Run examples**: `./vel projects/console/hello.vel`
 2. **Read the language guide**: See [LANGUAGE_REFERENCE.md](LANGUAGE_REFERENCE.md)
 3. **Review compiler commands**: See [CLI_REFERENCE.md](CLI_REFERENCE.md)
 4. **Test your setup**: See [TESTING.md](TESTING.md)
@@ -354,7 +354,7 @@ Vel/
 │   ├── ast.hpp          # AST definitions
 │   ├── codegen.hpp      # Code generator
 │   └── arena.hpp        # Memory allocator
-├── examples/            # Test programs
+├── projects/            # Test programs
 ├── CMakeLists.txt       # CMake configuration
 └── README.md
 ```

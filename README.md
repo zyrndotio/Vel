@@ -10,7 +10,7 @@
 
 [![CI](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml/badge.svg)](https://github.com/zyrndotio/Vel/actions/workflows/ci.yml)
 [![GitHub License](https://img.shields.io/badge/license-GPL--3.0-blue.svg)](LICENSE)
-[![Compiler Version](https://img.shields.io/badge/version-0.3.1-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
+[![Compiler Version](https://img.shields.io/badge/version-0.3.2-orange.svg)](https://github.com/zyrndotio/Vel/releases/latest)
 
 </div>
 
@@ -28,7 +28,7 @@ Perfect for applications that need to be fast, maintainable, and reliable.
 
 > **Platform note:** The compiler frontend is cross-platform. Native output currently targets x86-64 Linux, macOS, and Windows; Windows linking requires NASM plus MinGW-w64 or a compatible Win32 toolchain. Vel can build native console/application-core programs today, but a stable first-party windowing and event API is still on the roadmap.
 
-See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [desktop example](examples/desktop-app/README.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), [runtime ABI](docs/RUNTIME_ABI.md), and [Windows trust guidance](docs/WINDOWS_TRUST.md) for details.
+See the [platform support guide](docs/PLATFORM_SUPPORT.md), [desktop application quick start](docs/DESKTOP_QUICKSTART.md), [desktop example](projects/desktop-app/README.md), [native interoperability guide](docs/NATIVE_INTEROP.md), [CLI reference](docs/CLI_REFERENCE.md), [testing guide](docs/TESTING.md), [update design](docs/UPDATE_DESIGN.md), [runtime ABI](docs/RUNTIME_ABI.md), and [Windows trust guidance](docs/WINDOWS_TRUST.md) for details.
 
 The next application-platform milestone is documented in the [v0.3.2 design](docs/V0.3.2_DESIGN.md).
 
@@ -67,23 +67,23 @@ Windows WiX generator is an optional alternative and requires WiX separately.
 
 ```bash
 # Compile and execute (shows output directly)
-./vel examples/hello.vel
+./vel projects/console/hello.vel
 
 # Generate assembly and print it
-./vel asm examples/hello.vel
+./vel asm projects/console/hello.vel
 
 # Compile to a native binary for the host target
-./vel build examples/hello.vel
-./examples/hello  # Run the generated binary on Linux/macOS
+./vel build projects/console/hello.vel
+./projects/console/hello  # Run the generated binary on Linux/macOS
 
 # Emit Windows PE/COFF assembly from any host
-./vel asm examples/hello.vel windows-x86_64 > hello-windows.asm
+./vel asm projects/console/hello.vel windows-x86_64 > hello-windows.asm
 
 # Validate syntax without native tools (works on Windows/macOS/Linux)
-./vel check examples/hello.vel
+./vel check projects/console/hello.vel
 
 # Debug token stream
-./vel tokens examples/hello.vel
+./vel tokens projects/console/hello.vel
 ```
 
 ## Windows Installer
@@ -213,7 +213,7 @@ Vel/
 │   ├── ast.hpp         # Abstract syntax tree
 │   ├── codegen.hpp     # Code generation (x86-64)
 │   └── arena.hpp       # Memory arena allocator
-├── examples/           # Sample Vel programs
+├── projects/           # Sample Vel programs
 │   ├── hello.vel       # Hello World
 │   ├── counter.vel     # Loops and conditionals
 │   └── functions.vel   # Function definitions
@@ -290,7 +290,7 @@ let result = multiply(6, 7);
 print result;  // outputs: 42
 ```
 
-See [examples/](examples/) for more programs.
+See [projects/](projects/) for more programs.
 
 ---
 
@@ -324,7 +324,7 @@ vel version             Display compiler version
 
 ## 🛣️ Roadmap
 
-### Current (v0.3.1) ✅
+### Current (v0.3.2) ✅
 - [x] Variables (`let` / `mut`)
 - [x] Basic types (`int`, `float`, `str`, `bool`)
 - [x] Arithmetic & comparison operators

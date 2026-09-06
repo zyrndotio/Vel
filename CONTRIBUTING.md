@@ -60,20 +60,20 @@ g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 ```bash
 cmake -S . -B build
 cmake --build build
-./build/vel examples/hello.vel
+./build/vel projects/console/hello.vel
 ```
 
 ### Testing
 
 ```bash
 # Test tokenizer
-./vel tokens examples/hello.vel
+./vel tokens projects/console/hello.vel
 
 # Test assembly generation
-./vel asm examples/hello.vel
+./vel asm projects/console/hello.vel
 
 # Test all examples (Linux)
-./vel build examples/hello.vel
+./vel build projects/console/hello.vel
 ./hello
 ```
 
@@ -291,7 +291,7 @@ let slice = nums[1:3];   // [2, 3]
 
 ```
 Error [E001]: Undefined variable 'x'
-  --> examples/test.vel:5:10
+  --> projects/test.vel:5:10
    |
  5 |     print x;
    |           ^ undefined variable
@@ -430,10 +430,10 @@ Documentation improvements are always welcome:
 
 ### Unit Testing Approach
 
-Create `.vel` test files in `examples/` directory:
+Create `.vel` test files in `projects/` directory:
 
 ```vel
-// examples/test_feature.vel
+// projects/test_feature.vel
 // Tests your new feature
 
 // Test case 1
@@ -447,8 +447,8 @@ print other;
 
 Run with:
 ```bash
-./vel asm examples/test_feature.vel > output.asm
-./vel build examples/test_feature.vel
+./vel asm projects/test_feature.vel > output.asm
+./vel build projects/test_feature.vel
 ./test_feature
 ```
 

@@ -1,4 +1,0 @@
-name = "vel-desktop-app"
-version = "0.3.1"
-entry = "src/main.vel"
-test = "tests"

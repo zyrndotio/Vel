@@ -22,7 +22,7 @@ Extract the archive, place the `vel` executable in a directory on your `PATH`, a
 ```bash
 ./vel version
 ./vel doctor
-./vel check examples/hello.vel
+./vel check projects/console/hello.vel
 ```
 
 For a system-wide installation, use your operating system's normal package-management policy or copy the executable to a managed directory such as `/usr/local/bin` after reviewing the release and its checksum.

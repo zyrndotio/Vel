@@ -11,9 +11,9 @@ How to test Vel programs and validate the compiler.
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 
 # Test all examples
-./vel tokens examples/hello.vel
-./vel asm examples/counter.vel
-./vel asm examples/functions.vel
+./vel tokens projects/console/hello.vel
+./vel asm projects/console/counter.vel
+./vel asm projects/console/functions.vel
 ```
 
 ---
@@ -162,7 +162,7 @@ print "Hello, World!";
 
 **Expected Output**: `Hello, World!` followed by newline
 
-**Test Command**: `./vel asm examples/hello.vel`
+**Test Command**: `./vel asm projects/console/hello.vel`
 
 ### counter.vel
 **Purpose**: Loops, conditionals, arithmetic
@@ -185,7 +185,7 @@ if (count == 5) {
 
 **Expected Output**: `0 1 2 3 4` followed by `1`
 
-**Test Command**: `./vel build examples/counter.vel && ./counter`
+**Test Command**: `./vel build projects/console/counter.vel && ./counter`
 
 ### functions.vel
 **Purpose**: Function definitions and calls
@@ -208,7 +208,7 @@ print sq;
 
 **Expected Output**: `7` followed by `81`
 
-**Test Command**: `./vel build examples/functions.vel && ./functions`
+**Test Command**: `./vel build projects/console/functions.vel && ./functions`
 
 ---
 
@@ -226,13 +226,13 @@ echo "Building compiler..."
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 
 echo "Running tokenizer tests..."
-for file in examples/*.vel; do
+for file in projects/console/*.vel; do
     echo "  Testing $file"
     ./vel tokens "$file" > /dev/null
 done
 
 echo "Running assembly generation tests..."
-for file in examples/*.vel; do
+for file in projects/console/*.vel; do
     echo "  Testing $file"
     ./vel asm "$file" > /dev/null
 done
@@ -255,13 +255,13 @@ Write-Host "Building compiler..."
 g++ -std=c++23 -Wall -Wextra -Wpedantic -o vel src/main.cpp
 
 Write-Host "Running tokenizer tests..."
-Get-ChildItem examples/*.vel | ForEach-Object {
+Get-ChildItem projects/console/*.vel | ForEach-Object {
     Write-Host "  Testing $_"
     ./vel tokens $_
 }
 
 Write-Host "Running assembly tests..."
-Get-ChildItem examples/*.vel | ForEach-Object {
+Get-ChildItem projects/console/*.vel | ForEach-Object {
     Write-Host "  Testing $_"
     ./vel asm $_
 }
@@ -315,7 +315,7 @@ Run with:
 
 ```bash
 # Measure compilation time
-time ./vel asm examples/hello.vel
+time ./vel asm projects/console/hello.vel
 ```
 
 Expected: < 1 second
@@ -334,10 +334,10 @@ Expected: 4-8 KB
 
 ```bash
 # Linux
-/usr/bin/time -v ./vel asm examples/hello.vel
+/usr/bin/time -v ./vel asm projects/console/hello.vel
 
 # macOS
-/usr/bin/time -l ./vel asm examples/hello.vel
+/usr/bin/time -l ./vel asm projects/console/hello.vel
 ```
 
 Expected: < 10 MB
@@ -438,14 +438,14 @@ gdb ./program
 
 ### Before Changes
 ```bash
-./vel asm examples/hello.vel > hello_before.asm
-./vel asm examples/counter.vel > counter_before.asm
+./vel asm projects/console/hello.vel > hello_before.asm
+./vel asm projects/console/counter.vel > counter_before.asm
 ```
 
 ### After Changes
 ```bash
-./vel asm examples/hello.vel > hello_after.asm
-./vel asm examples/counter.vel > counter_after.asm
+./vel asm projects/console/hello.vel > hello_after.asm
+./vel asm projects/console/counter.vel > counter_after.asm
 ```
 
 ### Compare
@@ -461,7 +461,7 @@ diff counter_before.asm counter_after.asm
 ### Test Multiple Files
 
 ```bash
-for file in examples/*.vel; do
+for file in projects/console/*.vel; do
     base=$(basename "$file" .vel)
     echo "Testing $base..."
 
@@ -502,9 +502,9 @@ jobs:
 
       - name: Test Examples
         run: |
-          ./vel tokens examples/hello.vel
-          ./vel asm examples/counter.vel
-          ./vel asm examples/functions.vel
+          ./vel tokens projects/console/hello.vel
+          ./vel asm projects/console/counter.vel
+          ./vel asm projects/console/functions.vel
 ```
 
 ---

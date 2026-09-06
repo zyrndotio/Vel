@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.3.1 (Released)
+**Current Version**: 0.3.2 (Released)
 **Target Version**: 1.0.0 (Full Release)
 
 ---
@@ -12,7 +12,7 @@ This document outlines the planned features and improvements for the Vel program
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  v0.1.0 ───→ v0.2.0 ───→ v0.3.1 ───→ v0.3.2 ───→ v1.0.0  │
-│  (Released)  (Released)  (Released)  (In design) (Future)  │
+│  (Released)  (Released)  (Released)  (Released)  (Future)  │
 │  Early       Core Lang.  Tooling     App         Production│
 │  Build       Features    Foundations Foundations Ready     │
 └─────────────────────────────────────────────────────────────┘
@@ -99,7 +99,7 @@ print numbers.len();   // 5
 
 ```
 Error [E001]: Undefined variable 'count'
-  --> examples/test.vel:5:12
+  --> projects/test.vel:5:12
    |
  5 |     print count;
    |           ^^^^^ undefined variable
@@ -149,7 +149,7 @@ let name = "Vel";     // inferred as str
 - [ ] Stable project manifest and dependency model
 - [x] `vel build`, `vel run`, and a portable source-checking `vel test` workflow
 - [ ] Runtime assertions, test filters, and `vel publish`
-- [ ] First-party desktop application templates for Linux, macOS, and Windows
+- [x] Cross-platform desktop application project example and starter structure
 - [ ] Path-aware diagnostics with source snippets and actionable hints
 - [x] Cross-platform release archives and automated GitHub publishing
 - [x] Initial native string allocation ABI and large-concatenation regression
@@ -165,8 +165,8 @@ Vel should remain primarily implemented in **C++23**, with assembly limited to t
 - [x] Starter application project template and basic manifest metadata
 - [ ] Window/event abstraction with native backends
 - [ ] Resource bundling and platform-specific application packaging
-- [ ] Cross-platform filesystem and process APIs
-- [ ] Example desktop application built from Vel source
+- [x] Cross-platform filesystem and process host-shim foundation
+- [x] Example desktop application built from Vel source
 
 ### Roadmap audit — September 2026
 
@@ -185,7 +185,7 @@ The language is ready today for native command-line tools, application cores, da
 
 ## v0.3.2 — Application Foundations 🚧
 
-**Status**: In design and implementation
+**Status**: Released September 2026
 **Focus**: Make Vel useful for real native application foundations while defining a safe path toward desktop APIs.
 
 - [ ] Versioned runtime ABI for strings, arrays, structs, ownership, and allocation failure
@@ -198,6 +198,10 @@ The language is ready today for native command-line tools, application cores, da
 - [ ] Desktop window/event/resource interface design with an optional backend experiment
 - [x] Desktop application-core example with source, tests, assets, and host build scripts
 - [x] Release package wiring for the implemented host shim and application templates
+- [x] Canonical `projects/` tree for console and desktop sample projects
+- [x] Compiler source-size limit and hardened release compiler flags
+- [x] CMake sanitizer option for memory and undefined-behavior validation
+- [x] C/assembly interoperability documentation and packaged host ABI header
 
 The detailed design is in [docs/V0.3.2_DESIGN.md](docs/V0.3.2_DESIGN.md). v0.3.2 does not claim a complete widget toolkit, graphics engine, ARM64 backend, package registry, or production-ready GUI application bundle.
 

@@ -1,5 +1,5 @@
 #ifndef VEL_APP_VERSION
-  #define VEL_APP_VERSION "0.3.1"
+  #define VEL_APP_VERSION "0.3.2"
 #endif
 
 [Setup]
@@ -40,7 +40,7 @@ Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "examples\*"; DestDir: "{app}\examples"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "templates\*"; DestDir: "{app}\templates"; Flags: recursesubdirs createallsubdirs ignoreversion
+Source: "projects\*"; DestDir: "{app}\projects"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Registry]
 ; Append the binary directory to the current user's PATH without elevation.

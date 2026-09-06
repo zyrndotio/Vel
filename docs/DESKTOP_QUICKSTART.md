@@ -2,7 +2,7 @@
 
 Vel can currently build native x86-64 programs for Linux, macOS, and Windows, and its frontend, syntax checker, and assembly emitter run on all three desktop operating systems. The compiler is therefore suitable for experimenting with native application logic and command-line tools today.
 
-A complete first-party windowing and event API is **not yet part of the stable language**. The sample in [`templates/desktop-app`](../templates/desktop-app/) is an honest application foundation: it has a project manifest, a `src/main.vel` entry point, and a build/run workflow that works now. Window creation, graphics, menus, resources, and platform bundles remain roadmap work and should not be represented as already supported.
+A complete first-party windowing and event API is **not yet part of the stable language**. The sample in [`projects/desktop-app`](../projects/desktop-app/) is an honest application foundation: it has a project manifest, a `src/main.vel` entry point, and a build/run workflow that works now. Window creation, graphics, menus, resources, and platform bundles remain roadmap work and should not be represented as already supported.
 
 ## 1. Install Vel
 
@@ -20,7 +20,7 @@ vel doctor
 Copy the template and enter its directory:
 
 ```bash
-cp -R templates/desktop-app my-vel-app
+cp -R projects/desktop-app my-vel-app
 cd my-vel-app
 ```
 

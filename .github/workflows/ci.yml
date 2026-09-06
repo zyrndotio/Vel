@@ -32,10 +32,10 @@ jobs:
         shell: bash
         run: |
           ./build/vel version
-          ./build/vel check examples/hello.vel
-          ./build/vel check examples/counter.vel
-          ./build/vel check examples/functions.vel
-          ./build/vel asm examples/hello.vel > /tmp/hello.asm
+          ./build/vel check projects/console/hello.vel
+          ./build/vel check projects/console/counter.vel
+          ./build/vel check projects/console/functions.vel
+          ./build/vel asm projects/console/hello.vel > /tmp/hello.asm
           test -s /tmp/hello.asm
 
       - name: Portable frontend smoke tests (Windows)
@@ -43,13 +43,13 @@ jobs:
         shell: pwsh
         run: |
           .\build\Release\vel.exe version
-          .\build\Release\vel.exe check examples\hello.vel
-          .\build\Release\vel.exe check examples\counter.vel
-          .\build\Release\vel.exe check examples\functions.vel
+          .\build\Release\vel.exe check projects\console\hello.vel
+          .\build\Release\vel.exe check projects\console\counter.vel
+          .\build\Release\vel.exe check projects\console\functions.vel
           .\build\Release\vel.exe check tests\data_types.vel
-          .\build\Release\vel.exe asm examples\hello.vel | Out-File -Encoding utf8 hello.asm
+          .\build\Release\vel.exe asm projects\console\hello.vel | Out-File -Encoding utf8 hello.asm
           if ((Get-Item hello.asm).Length -eq 0) { throw 'Assembly output is empty' }
-          .\build\Release\vel.exe asm examples\hello.vel windows-x86_64 | Out-File -Encoding ascii windows.asm
+          .\build\Release\vel.exe asm projects\console\hello.vel windows-x86_64 | Out-File -Encoding ascii windows.asm
           nasm -f win64 windows.asm -o windows.obj
           if (-not (Test-Path windows.obj)) { throw 'PE/COFF object was not generated' }
 
@@ -80,6 +80,6 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          ./build/vel build examples/hello.vel
-          ./examples/hello | grep -Fx 'Hello, World!'
-          rm -f examples/hello
+          ./build/vel build projects/console/hello.vel
+          ./projects/console/hello | grep -Fx 'Hello, World!'
+          rm -f projects/console/hello

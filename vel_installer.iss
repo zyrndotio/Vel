@@ -39,7 +39,6 @@ Source: "runtime\vel_std.h"; DestDir: "{app}\include\vel"; Flags: ignoreversion
 Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\logo.png"; DestDir: "{app}\assets"; Flags: ignoreversion
 Source: "docs\*"; DestDir: "{app}\docs"; Flags: recursesubdirs createallsubdirs ignoreversion
-Source: "examples\*"; DestDir: "{app}\examples"; Flags: recursesubdirs createallsubdirs ignoreversion
 Source: "projects\*"; DestDir: "{app}\projects"; Flags: recursesubdirs createallsubdirs ignoreversion
 
 [Registry]

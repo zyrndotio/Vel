@@ -76,7 +76,7 @@ jobs:
         shell: pwsh
         run: |
           $version = $env:GITHUB_REF_NAME -replace '^v',''
-          cmake -S . -B build -DVEL_VERSION=$version
+          cmake -S . -B build "-DVEL_VERSION=$version"
           cmake --build build --config Release --parallel 2
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' "/DVEL_APP_VERSION=$version" vel_installer.iss
       - name: Package portable archive

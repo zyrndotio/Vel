@@ -16,10 +16,17 @@ EOF
 "$VEL" check "$ROOT/app" >/tmp/vel-project-check.out
 "$VEL" test "$ROOT/app" >/tmp/vel-project-test.out
 grep -Fq "manifest test source" /tmp/vel-project-test.out || true
-"$VEL" build "$ROOT/app" >/tmp/vel-project-build.out
-"$VEL" run "$ROOT/app" >/tmp/vel-project-run.out 2>/tmp/vel-project-run.err
-grep -Fxq 'Hello from Vel' /tmp/vel-project-run.out
+if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+    "$VEL" build "$ROOT/app" >/tmp/vel-project-build.out
+    "$VEL" run "$ROOT/app" >/tmp/vel-project-run.out 2>/tmp/vel-project-run.err
+    grep -Fxq 'Hello from Vel' /tmp/vel-project-run.out
+else
+    "$VEL" asm "$ROOT/app"/src/main.vel >/tmp/vel-project-build.out
+    test -s /tmp/vel-project-build.out
+fi
 "$VEL" clean "$ROOT/app" >/dev/null
-! test -e "$ROOT/app/src/main"
+if [[ "$(uname -s)" == "Linux" && "$(uname -m)" == "x86_64" ]]; then
+    ! test -e "$ROOT/app/src/main"
+fi
 rm -f /tmp/vel-project-check.out /tmp/vel-project-test.out /tmp/vel-project-build.out /tmp/vel-project-run.out /tmp/vel-project-run.err
 echo "Vel manifest project tests passed."

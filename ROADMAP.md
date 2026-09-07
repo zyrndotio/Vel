@@ -2,7 +2,7 @@
 
 This document outlines the planned features and improvements for the Vel programming language.
 
-**Current Version**: 0.3.2 (Released)
+**Current Version**: 0.3.3 (In preparation)
 **Target Version**: 1.0.0 (Full Release)
 
 ---
@@ -185,10 +185,10 @@ The language is ready today for native command-line tools, application cores, da
 
 ---
 
-## v0.3.2 — Application Foundations 🚧
+## v0.3.3 — Application Foundations and ABI Readiness 🚧
 
-**Status**: Released September 2026
-**Focus**: Make Vel useful for real native application foundations while defining a safe path toward desktop APIs.
+**Status**: In preparation; v0.3.2 is the historical base release
+**Focus**: Stabilize the application-foundation ABI, diagnostics, project behavior, and release validation without claiming GUI completeness.
 
 - [ ] Versioned runtime ABI for strings, arrays, structs, ownership, and allocation failure
 - [x] Cross-platform host-shim foundation for environment, files, and processes
@@ -205,7 +205,7 @@ The language is ready today for native command-line tools, application cores, da
 - [x] CMake sanitizer option for memory and undefined-behavior validation
 - [x] C/assembly interoperability documentation and packaged host ABI header
 
-The detailed design is in [docs/V0.3.2_DESIGN.md](docs/V0.3.2_DESIGN.md). v0.3.2 does not claim a complete widget toolkit, graphics engine, ARM64 backend, package registry, or production-ready GUI application bundle.
+The v0.3.2 historical design is in [docs/V0.3.2_DESIGN.md](docs/V0.3.2_DESIGN.md). The active v0.3.3 readiness review is in [docs/V0.3.3_READINESS.md](docs/V0.3.3_READINESS.md). v0.3.3 does not claim a complete widget toolkit, graphics engine, ARM64 backend, package registry, or production-ready GUI application bundle.
 
 ---
 

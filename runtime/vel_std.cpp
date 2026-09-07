@@ -84,8 +84,8 @@ extern "C" int vel_fs_read_text(const char* path, VelBuffer* out)
 
 extern "C" int vel_fs_write_text(const char* path, const unsigned char* data, size_t length)
 {
-    if (!path || (!data && length != 0) || *path == '\0') return VEL_STD_INVALID_ARGUMENT;
     if (length > max_text_bytes) return VEL_STD_IO_ERROR;
+    if (!path || (!data && length != 0) || *path == '\0') return VEL_STD_INVALID_ARGUMENT;
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
     if (!file.is_open()) return VEL_STD_PERMISSION_DENIED;
     file.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(length));

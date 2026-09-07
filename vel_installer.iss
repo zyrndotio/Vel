@@ -1,5 +1,5 @@
 #ifndef VEL_APP_VERSION
-  #define VEL_APP_VERSION "0.3.2"
+  #define VEL_APP_VERSION "0.3.3"
 #endif
 
 [Setup]

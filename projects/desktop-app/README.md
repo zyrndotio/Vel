@@ -1,6 +1,6 @@
 # Vel Desktop Application Example
 
-This example is a complete **application-core project** using the current Vel project workflow. It is intentionally honest about the current platform boundary: Vel 0.3.2 can check, test, build, and run this native program, but it does not yet provide a first-party windowing, event, graphics, or resource-loading API.
+This example is a complete **application-core project** using the current Vel project workflow. It is intentionally honest about the current platform boundary: Vel 0.3.3 can check, test, build, and run this native program, but it does not yet provide a first-party windowing, event, graphics, or resource-loading API.
 
 ## Run the example
 

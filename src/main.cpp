@@ -17,7 +17,7 @@
 #include "type_checker.hpp"
 
 #ifndef VEL_VERSION_STRING
-#define VEL_VERSION_STRING "0.3.2"
+#define VEL_VERSION_STRING "0.3.3"
 #endif
 
 namespace fs = std::filesystem;

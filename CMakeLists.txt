@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-set(VEL_VERSION "0.3.2" CACHE STRING "Vel release version")
+set(VEL_VERSION "0.3.3" CACHE STRING "Vel release version")
 project(vel VERSION ${VEL_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)

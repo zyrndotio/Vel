@@ -67,6 +67,9 @@ jobs:
 
   windows:
     runs-on: windows-latest
+    env:
+      WINDOWS_CODESIGNING_CERT_BASE64: ${{ secrets.WINDOWS_CODESIGNING_CERT_BASE64 }}
+      WINDOWS_CODESIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_CODESIGNING_CERT_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Inno Setup
@@ -78,7 +81,41 @@ jobs:
           $version = $env:GITHUB_REF_NAME -replace '^v',''
           cmake -S . -B build "-DVEL_VERSION=$version"
           cmake --build build --config Release --parallel 2
+      - name: Sign compiler binary when a certificate is configured
+        if: ${{ env.WINDOWS_CODESIGNING_CERT_BASE64 != '' && env.WINDOWS_CODESIGNING_CERT_PASSWORD != '' }}
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'vel-signing.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CODESIGNING_CERT_BASE64))
+          $signTool = Get-ChildItem "$env:ProgramFiles(x86)\Windows Kits\10\bin" -Filter signtool.exe -Recurse |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signTool) { throw 'Windows SDK SignTool was not found on the runner' }
+          & $signTool.FullName sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com `
+            /f $pfx /p $env:WINDOWS_CODESIGNING_CERT_PASSWORD /d 'Vel Programming Language' `
+            /du 'https://github.com/zyrndotio/Vel' build\Release\vel.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Signing vel.exe failed' }
+          & $signTool.FullName verify /pa /all build\Release\vel.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Verification of vel.exe failed' }
+      - name: Create Windows installer
+        shell: pwsh
+        run: |
+          $version = $env:GITHUB_REF_NAME -replace '^v',''
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' "/DVEL_APP_VERSION=$version" vel_installer.iss
+      - name: Sign Windows installer when a certificate is configured
+        if: ${{ env.WINDOWS_CODESIGNING_CERT_BASE64 != '' && env.WINDOWS_CODESIGNING_CERT_PASSWORD != '' }}
+        shell: pwsh
+        run: |
+          $pfx = Join-Path $env:RUNNER_TEMP 'vel-signing.pfx'
+          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:WINDOWS_CODESIGNING_CERT_BASE64))
+          $signTool = Get-ChildItem "$env:ProgramFiles(x86)\Windows Kits\10\bin" -Filter signtool.exe -Recurse |
+            Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signTool) { throw 'Windows SDK SignTool was not found on the runner' }
+          & $signTool.FullName sign /fd SHA256 /td SHA256 /tr http://timestamp.digicert.com `
+            /f $pfx /p $env:WINDOWS_CODESIGNING_CERT_PASSWORD /d 'Vel Programming Language Installer' `
+            /du 'https://github.com/zyrndotio/Vel' installer_output\VelSetup-x64.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Signing VelSetup-x64.exe failed' }
+          & $signTool.FullName verify /pa /all installer_output\VelSetup-x64.exe
+          if ($LASTEXITCODE -ne 0) { throw 'Verification of VelSetup-x64.exe failed' }
       - name: Package portable archive
         shell: pwsh
         run: |

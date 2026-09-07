@@ -34,7 +34,7 @@ Run `VelSetup-x64.exe` for an installed setup, or extract the portable `.zip` an
 ```powershell
 vel.exe version
 vel.exe doctor
-vel.exe check examples\hello.vel
+vel.exe check projects\console\hello.vel
 ```
 
 ## Build from source

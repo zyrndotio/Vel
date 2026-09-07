@@ -1,6 +1,7 @@
 #include "vel_std.h"
 
 #include <cstdlib>
+#include <cstdint>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -12,6 +13,8 @@
 namespace fs = std::filesystem;
 
 namespace {
+
+constexpr std::uintmax_t max_text_bytes = 64 * 1024 * 1024;
 
 int copy_string(const std::string& value, VelBuffer* out)
 {
@@ -65,6 +68,9 @@ extern "C" int vel_fs_exists(const char* path, int* out_exists)
 extern "C" int vel_fs_read_text(const char* path, VelBuffer* out)
 {
     if (!path || !out || *path == '\0') return VEL_STD_INVALID_ARGUMENT;
+    std::error_code size_error;
+    const auto size = fs::file_size(path, size_error);
+    if (!size_error && size > max_text_bytes) return VEL_STD_IO_ERROR;
     std::ifstream file(path, std::ios::binary);
     if (!file.is_open()) {
         std::error_code error;
@@ -79,6 +85,7 @@ extern "C" int vel_fs_read_text(const char* path, VelBuffer* out)
 extern "C" int vel_fs_write_text(const char* path, const unsigned char* data, size_t length)
 {
     if (!path || (!data && length != 0) || *path == '\0') return VEL_STD_INVALID_ARGUMENT;
+    if (length > max_text_bytes) return VEL_STD_IO_ERROR;
     std::ofstream file(path, std::ios::binary | std::ios::trunc);
     if (!file.is_open()) return VEL_STD_PERMISSION_DENIED;
     file.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(length));

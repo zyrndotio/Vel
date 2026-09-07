@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- Added `docs/WINDOWS_SIGNING.md` with local self-signed testing, production certificate options, secret handling, and verification instructions.
+- Added optional protected-secret Authenticode signing for `vel.exe` and `VelSetup-x64.exe` in the Windows release job.
+- Added the v0.3.2 desktop and core-module readiness review.
+
+### Security
+- Added the 64 MiB text-I/O limit to the C ABI host shim and regression coverage for invalid arguments and oversized writes.
+
 ## [0.3.2] - 2026-09-06
 
 ### Added

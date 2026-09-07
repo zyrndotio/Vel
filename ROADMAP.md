@@ -175,6 +175,8 @@ The v0.3.0 implementation delivered native string allocation, dynamic scalar arr
 The language is ready today for native command-line tools, application cores, data-processing programs, and other programs that fit the supported language and target ABI. It is **not yet a complete desktop GUI platform**: Vel does not currently ship a stable window/event/drawing API, module and dependency system, formatter, language server, debugger, resource bundler, or native `.app`/`.deb`/Windows application packaging workflow. Those capabilities are required before claiming a turnkey creative desktop-application experience.
 
 ### Update and Release Security
+- [x] Optional protected-secret Authenticode signing step for Windows binaries and installers
+- [ ] Configure a production certificate or managed signing provider for the release environment
 - [ ] Signed release manifest and key rotation policy
 - [ ] Verify asset digest before installation
 - [ ] Atomic replacement through a platform-native helper
@@ -197,7 +199,7 @@ The language is ready today for native command-line tools, application cores, da
 - [ ] ABI conformance and runtime behavior fixtures across supported targets
 - [ ] Desktop window/event/resource interface design with an optional backend experiment
 - [x] Desktop application-core example with source, tests, assets, and host build scripts
-- [x] Release package wiring for the implemented host shim and application templates
+- [x] Release package wiring for the implemented host shim and application projects
 - [x] Canonical `projects/` tree for console and desktop sample projects
 - [x] Compiler source-size limit and hardened release compiler flags
 - [x] CMake sanitizer option for memory and undefined-behavior validation

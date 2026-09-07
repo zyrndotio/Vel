@@ -8,6 +8,9 @@
 int main()
 {
     VelBuffer buffer{};
+    assert(vel_env_get(nullptr, &buffer) == VEL_STD_INVALID_ARGUMENT);
+    assert(vel_fs_write_text("", nullptr, 0) == VEL_STD_INVALID_ARGUMENT);
+    assert(vel_fs_write_text("oversized", nullptr, 64 * 1024 * 1024 + 1) == VEL_STD_IO_ERROR);
     assert(vel_env_current_dir(&buffer) == VEL_STD_OK);
     assert(buffer.length > 0);
     vel_buffer_free(&buffer);

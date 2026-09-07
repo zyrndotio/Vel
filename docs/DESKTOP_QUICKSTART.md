@@ -27,7 +27,7 @@ cd my-vel-app
 On PowerShell:
 
 ```powershell
-Copy-Item -Recurse templates\desktop-app my-vel-app
+Copy-Item -Recurse projects\desktop-app my-vel-app
 Set-Location my-vel-app
 ```
 
